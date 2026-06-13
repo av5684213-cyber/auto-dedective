@@ -1,0 +1,202 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  phone     String?
+  city      String?
+  district  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  favorites Favorite[]
+  searches  SavedSearch[]
+  listings  Listing[]
+}
+
+model Listing {
+  id                  String          @id @default(cuid())
+  source              ListingSource   @default(DIGER)
+  externalId          String?
+  url                 String          @default("")
+  title               String?
+  brand               String?
+  series              String?
+  model               String?
+  year                Int?
+  variant             String?
+  bodyType            String?
+  transmission        String?
+  fuel                String?
+  color               String?
+  enginePower         Int?
+  engineCc            Int?
+  drivetrain          String?
+  km                  Int?
+  condition           CarCondition?
+  sellerType          SellerType      @default(BILINMIYOR)
+  warranty            Boolean         @default(false)
+  heavyDamageRecord   Boolean         @default(false)
+  plateOrigin         String?
+  exchange            Boolean         @default(false)
+  price               Int?
+  priceText           String?
+  negotiable          Boolean         @default(false)
+  description         String?
+  equipment           String          @default("[]")
+  damageMap           String          @default("{}")
+  photos              String          @default("[]")
+  coverPhotoIndex     Int             @default(0)
+  city                String?
+  district            String?
+  contactName         String?
+  contactPhone        String?
+  sellerName          String?
+  phone               String?
+  scrapedAt           DateTime        @default(now())
+  dedupKey            String?
+  isActive            Boolean         @default(true)
+  priceDropped        Boolean         @default(false)
+  dealScore           Int?
+  photoHashes         String          @default("[]")
+  status              ListingStatus   @default(DRAFT)
+  publishedAt         DateTime?
+  userId              String?
+  user                User?           @relation(fields: [userId], references: [id])
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  snapshots           PriceSnapshot[]
+  favorites           Favorite[]
+
+  @@index([dedupKey])
+  @@index([brand, model, year])
+  @@index([city])
+  @@index([source])
+  @@index([status])
+  @@index([userId])
+}
+
+model PriceSnapshot {
+  id         String   @id @default(cuid())
+  listingId  String
+  listing    Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  price      Int
+  capturedAt DateTime @default(now())
+
+  @@index([listingId])
+}
+
+model PhoneStat {
+  phone           String   @id
+  listingCount    Int      @default(0)
+  distinctTitles  String   @default("[]")
+  suspectedDealer Boolean  @default(false)
+  updatedAt       DateTime @updatedAt
+}
+
+model SavedSearch {
+  id             String          @id @default(cuid())
+  userId         String?
+  user           User?           @relation(fields: [userId], references: [id])
+  name           String
+  queryJson      String
+  channel        NotifChannel    @default(PUSH)
+  lastNotifiedAt DateTime?
+  isActive       Boolean         @default(true)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  note      String?
+  tags      String   @default("[]")
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([listingId])
+}
+
+model ModelInfo {
+  id              String   @id @default(cuid())
+  brand           String
+  model           String
+  commonIssues    String   @default("[]")
+  partsCostNote   String?
+  avgFuel         String?
+  inspectionTips  String   @default("[]")
+
+  @@unique([brand, model])
+}
+
+model AlertFilter {
+  id              String   @id @default(cuid())
+  name            String
+  filtersJson     String
+  isActive        Boolean  @default(true)
+  intervalMinutes Int      @default(10)
+  lastScannedAt   DateTime?
+  lastResultCount Int      @default(0)
+  totalScans      Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  notifications   AlertNotification[]
+}
+
+model AlertNotification {
+  id          String      @id @default(cuid())
+  alertId     String
+  alert       AlertFilter @relation(fields: [alertId], references: [id], onDelete: Cascade)
+  title       String
+  snippet     String
+  url         String
+  source      String
+  price       String      @default("")
+  isRead      Boolean     @default(false)
+  foundAt     DateTime    @default(now())
+}
+
+enum ListingSource {
+  SAHIBINDEN
+  ARABAM
+  LETGO
+  DIGER
+  OTODEDEKTIF
+}
+
+enum SellerType {
+  SAHIBI
+  GALERI
+  BILINMIYOR
+}
+
+enum CarCondition {
+  SIFIR
+  IKINCI_EL
+}
+
+enum ListingStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum NotifChannel {
+  EMAIL
+  PUSH
+  TELEGRAM
+}

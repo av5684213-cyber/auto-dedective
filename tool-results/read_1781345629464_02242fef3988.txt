@@ -1,0 +1,1868 @@
+     1→'use client'
+     2→
+     3→import { useState, useEffect, useRef, useCallback } from 'react'
+     4→import Image from 'next/image'
+     5→import { motion, useInView, AnimatePresence } from 'framer-motion'
+     6→import {
+     7→  Radar, Search, Shield, TrendingDown, Bot, Star, Bell, Car,
+     8→  ChevronRight, Zap, Eye, CheckCircle2, AlertTriangle, ArrowDown,
+     9→  MessageSquare, Wrench, Calculator, Crown, Target, Sparkles,
+    10→  MapPin, Smartphone, BarChart3, Lock, Users, Globe, Play,
+    11→  X, SlidersHorizontal, RotateCcw, Loader2, Heart,
+    12→  Filter, ChevronUp, ChevronDown, ToggleLeft, ToggleRight, Send,
+    13→  ExternalLink, BadgeCheck, Clock, Flame, Tag, CarFront, Gauge,
+    14→  Fuel, Palette, Settings2, MapPinned, UserCircle, FileCheck,
+    15→  ShieldCheck, WrenchIcon, ImagePlus, CalendarDays, CircleDot,
+    16→  Phone, Mail, Building2, Copy, Check,
+    17→  BellRing, AlarmClock, Activity, Trash2, EyeOff,
+    18→  GitCompare, MessageCircle, AlertOctagon, Info, DollarSign,
+    19→  Siren, Sparkle, ThumbsUp, ArrowUpDown
+    20→} from 'lucide-react'
+    21→import DedektifPuani from '@/components/DedektifPuani'
+    22→
+    23→/* ─── DATA ─── */
+    24→const BRANDS: Record<string, string[]> = {
+    25→  'Renault': ['Clio', 'Megane', 'Captur', 'Kadjar', 'Taliant', 'Koleos', 'Fluence', 'Symbol'],
+    26→  'Fiat': ['Egea', '500', 'Panda', 'Tipo', 'Ducato', '500X', 'Punto', 'Linea'],
+    27→  'Volkswagen': ['Golf', 'Passat', 'Tiguan', 'Polo', 'T-Roc', 'Touareg', 'Jetta', 'Caddy'],
+    28→  'Toyota': ['Corolla', 'Camry', 'RAV4', 'C-HR', 'Yaris', 'Hilux', 'Land Cruiser', 'Prius'],
+    29→  'Hyundai': ['Tucson', 'i20', 'i30', 'Kona', 'Bayon', 'Santa Fe', 'Accent', 'Elantra'],
+    30→  'BMW': ['3 Serisi', '5 Serisi', 'X1', 'X3', 'X5', '1 Serisi', '4 Serisi', 'X6'],
+    31→  'Mercedes': ['C Serisi', 'E Serisi', 'GLC', 'A Serisi', 'CLA', 'GLA', 'GLE', 'S Serisi'],
+    32→  'Citroen': ['C4', 'C3', 'C5 Aircross', 'C-Elysee', 'Berlingo', 'C4 Cactus', 'Jumpy'],
+    33→  'Peugeot': ['3008', '2008', '308', '508', '208', 'Rifter', 'Partner', '5008'],
+    34→  'Honda': ['Civic', 'CR-V', 'HR-V', 'City', 'Jazz', 'Accord'],
+    35→  'Ford': ['Focus', 'Kuga', 'Puma', 'Ranger', 'EcoSport', 'Fiesta', 'Mondeo', 'Transit'],
+    36→  'Kia': ['Sportage', 'Ceed', 'Stonic', 'Seltos', 'Sorento', 'Picanto', 'Rio', 'EV6'],
+    37→  'Skoda': ['Octavia', 'Superb', 'Kodiaq', 'Kamiq', 'Scala', 'Fabia', 'Karoq', 'Enyaq'],
+    38→  'Volvo': ['XC40', 'XC60', 'XC90', 'S60', 'V60', 'V90', 'S90', 'C40'],
+    39→  'Audi': ['A3', 'A4', 'A6', 'Q5', 'Q3', 'Q7', 'A5', 'Q2'],
+    40→  'Dacia': ['Duster', 'Sandero', 'Logan', 'Spring', 'Jogger', 'Lodgy'],
+    41→  'Seat': ['Leon', 'Ateca', 'Ibiza', 'Arona', 'Tarraco', 'Toledo'],
+    42→  'Opel': ['Astra', 'Corsa', 'Mokka', 'Crossland', 'Grandland', 'Insignia', 'Zafira'],
+    43→  'Nissan': ['Qashqai', 'Juke', 'X-Trail', 'Micra', 'Leaf', 'Navara'],
+    44→  'Mazda': ['CX-5', '3', 'CX-30', '6', 'MX-5', 'CX-60'],
+    45→  'Suzuki': ['Vitara', 'Swift', 'Jimny', 'S-Cross', 'Baleno'],
+    46→  'Subaru': ['Impreza', 'Forester', 'Outback', 'XV', 'WRX'],
+    47→  'Mini': ['Cooper', 'Countryman', 'Clubman', 'Paceman'],
+    48→  'Jeep': ['Compass', 'Renegade', 'Cherokee', 'Wrangler', 'Grand Cherokee'],
+    49→  'Land Rover': ['Range Rover', 'Discovery', 'Defender', 'Evoque'],
+    50→  'Porsche': ['Cayenne', 'Macan', '911', 'Boxster', 'Panamera'],
+    51→  'Tesla': ['Model 3', 'Model Y', 'Model S', 'Model X'],
+    52→  'Tofas': ['Sahin', 'Doguan', 'Kartal', 'Murat 131'],
+    53→  'Anadol': ['A1', 'A2', 'Bugalama', 'STC-16'],
+    54→}
+    55→
+    56→const CITIES = [
+    57→  'Türkiye Geneli', 'Adana', 'Adıyaman', 'Afyon', 'Ağrı', 'Aksaray', 'Amasya', 'Ankara',
+    58→  'Antalya', 'Ardahan', 'Artvin', 'Aydın', 'Balıkesir', 'Bartın', 'Batman', 'Bayburt',
+    59→  'Bilecik', 'Bingöl', 'Bitlis', 'Bolu', 'Burdur', 'Bursa', 'Çanakkale', 'Çankırı',
+    60→  'Çorum', 'Denizli', 'Diyarbakır', 'Düzce', 'Edirne', 'Elazığ', 'Erzincan', 'Erzurum',
+    61→  'Eskişehir', 'Gaziantep', 'Giresun', 'Gümüşhane', 'Hakkari', 'Hatay', 'Iğdır',
+    62→  'Isparta', 'İstanbul', 'İzmir', 'Kahramanmaraş', 'Karabük', 'Karaman', 'Kars',
+    63→  'Kastamonu', 'Kayseri', 'Kilis', 'Kırıkkale', 'Kırklareli', 'Kırşehir', 'Kocaeli',
+    64→  'Konya', 'Kütahya', 'Malatya', 'Manisa', 'Mardin', 'Mersin', 'Muğla', 'Muş',
+    65→  'Nevşehir', 'Niğde', 'Ordu', 'Osmaniye', 'Rize', 'Sakarya', 'Samsun', 'Şanlıurfa',
+    66→  'Siirt', 'Sinop', 'Sivas', 'Şırnak', 'Tekirdağ', 'Tokat', 'Trabzon', 'Tunceli',
+    67→  'Uşak', 'Van', 'Yalova', 'Yozgat', 'Zonguldak'
+    68→]
+    69→
+    70→const PLATE_CITIES = [
+    71→  '01 Adana', '06 Ankara', '07 Antalya', '16 Bursa', '34 İstanbul', '35 İzmir',
+    72→  '21 Diyarbakır', '25 Erzurum', '26 Eskişehir', '27 Gaziantep', '31 Hatay',
+    73→  '41 Kocaeli', '42 Konya', '44 Malatya', '33 Mersin', '48 Muğla', '54 Sakarya',
+    74→  '55 Samsun', '59 Tekirdağ', '61 Trabzon', '63 Şanlıurfa'
+    75→]
+    76→
+    77→const COLORS = ['Beyaz', 'Siyah', 'Gri', 'Kırmızı', 'Mavi', 'Lacivert', 'Yeşil', 'Bordo', 'Turuncu', 'Bej', 'Gümüş', 'Kahverengi', 'Mor', 'Sarı', 'Bakır', 'Altın', 'Haki', 'Pembe', 'Açık Gri', 'Koyu Gri', 'Füme']
+    78→
+    79→const MOCK_LISTINGS = [
+    80→  { id: 1, brand: 'Citroen', model: 'C4', year: 2022, km: 45000, fuel: 'Dizel', trans: 'Otomatik', price: 1020000, city: 'Ankara', color: 'Beyaz', body: 'Hatchback', hp: 130, engine: '1.5 BlueHDi', drive: 'Önden Çekiş', damage: 8500, damageDetail: 'Sol ön çamurluk boyalı, Arka tampon değişen', seller: 'Galeri', score: 88, accident: false },
+    81→  { id: 2, brand: 'Toyota', model: 'Corolla', year: 2021, km: 62000, fuel: 'Hibrit', trans: 'Otomatik', price: 980000, city: 'İstanbul', color: 'Gri', body: 'Sedan', hp: 140, engine: '1.8 Hybrid', drive: 'Önden Çekiş', damage: 0, damageDetail: 'Hasarsız', seller: 'Bireysel', score: 92, accident: false },
+    82→  { id: 3, brand: 'Volkswagen', model: 'Golf', year: 2023, km: 18000, fuel: 'Benzin', trans: 'Otomatik', price: 1150000, city: 'İzmir', color: 'Siyah', body: 'Hatchback', hp: 150, engine: '1.5 TSI', drive: 'Önden Çekiş', damage: 0, damageDetail: 'Hasarsız', seller: 'Galeri', score: 95, accident: false },
+    83→  { id: 4, brand: 'Hyundai', model: 'Tucson', year: 2022, km: 55000, fuel: 'Dizel', trans: 'Otomatik', price: 1050000, city: 'Bursa', color: 'Beyaz', body: 'SUV', hp: 136, engine: '1.6 CRDi', drive: '4WD', damage: 12000, damageDetail: 'Sağ arka kapı boyalı', seller: 'Galeri', score: 85, accident: false },
+    84→  { id: 5, brand: 'BMW', model: '3 Serisi', year: 2021, km: 72000, fuel: 'Dizel', trans: 'Otomatik', price: 1350000, city: 'İstanbul', color: 'Lacivert', body: 'Sedan', hp: 190, engine: '320d', drive: 'Arkadan İtiş', damage: 35000, damageDetail: 'Ön tampon değişen, sol kanat boyalı', seller: 'Galeri', score: 72, accident: true },
+    85→  { id: 6, brand: 'Renault', model: 'Megane', year: 2023, km: 15000, fuel: 'Benzin', trans: 'Otomatik', price: 780000, city: 'Ankara', color: 'Kırmızı', body: 'Hatchback', hp: 140, engine: '1.3 TCe', drive: 'Önden Çekiş', damage: 0, damageDetail: 'Hasarsız', seller: 'Bireysel', score: 90, accident: false },
+    86→  { id: 7, brand: 'Ford', model: 'Kuga', year: 2022, km: 48000, fuel: 'Dizel', trans: 'Otomatik', price: 950000, city: 'Kocaeli', color: 'Gri', body: 'SUV', hp: 150, engine: '2.0 TDCi', drive: 'AWD', damage: 5000, damageDetail: 'Arka çamurluk boyalı', seller: 'Galeri', score: 87, accident: false },
+    87→  { id: 8, brand: 'Mercedes', model: 'C Serisi', year: 2020, km: 95000, fuel: 'Dizel', trans: 'Otomatik', price: 1650000, city: 'İstanbul', color: 'Siyah', body: 'Sedan', hp: 200, engine: 'C200d', drive: 'Arkadan İtiş', damage: 45000, damageDetail: 'Ön tampon değişen, kaput boyalı, sağ ön kanat değişen', seller: 'Galeri', score: 65, accident: true },
+    88→  { id: 9, brand: 'Skoda', model: 'Octavia', year: 2022, km: 38000, fuel: 'Benzin', trans: 'Otomatik', price: 890000, city: 'Eskişehir', color: 'Gümüş', body: 'Sedan', hp: 150, engine: '1.5 TSI', drive: 'Önden Çekiş', damage: 0, damageDetail: 'Hasarsız', seller: 'Bireysel', score: 91, accident: false },
+    89→  { id: 10, brand: 'Peugeot', model: '3008', year: 2021, km: 68000, fuel: 'Dizel', trans: 'Otomatik', price: 920000, city: 'Antalya', color: 'Beyaz', body: 'SUV', hp: 130, engine: '1.5 BlueHDi', drive: 'Önden Çekiş', damage: 7000, damageDetail: 'Sol arka kapı boyalı', seller: 'Galeri', score: 84, accident: false },
+    90→  { id: 11, brand: 'Kia', model: 'Sportage', year: 2023, km: 22000, fuel: 'Benzin', trans: 'Otomatik', price: 1100000, city: 'Ankara', color: 'Mavi', body: 'SUV', hp: 150, engine: '1.6 T-GDi', drive: 'Önden Çekiş', damage: 0, damageDetail: 'Hasarsız', seller: 'Galeri', score: 93, accident: false },
+    91→  { id: 12, brand: 'Honda', model: 'Civic', year: 2022, km: 35000, fuel: 'Benzin', trans: 'Otomatik', price: 970000, city: 'İstanbul', color: 'Siyah', body: 'Sedan', hp: 182, engine: '1.5 VTEC Turbo', drive: 'Önden Çekiş', damage: 0, damageDetail: 'Hasarsız', seller: 'Bireysel', score: 94, accident: false },
+    92→  { id: 13, brand: 'Fiat', model: 'Egea', year: 2023, km: 12000, fuel: 'Dizel', trans: 'Otomatik', price: 620000, city: 'Konya', color: 'Beyaz', body: 'Sedan', hp: 95, engine: '1.3 MultiJet', drive: 'Önden Çekiş', damage: 0, damageDetail: 'Hasarsız', seller: 'Bireysel', score: 89, accident: false },
+    93→  { id: 14, brand: 'Audi', model: 'A4', year: 2021, km: 78000, fuel: 'Dizel', trans: 'Otomatik', price: 1480000, city: 'İzmir', color: 'Gri', body: 'Sedan', hp: 190, engine: '2.0 TDI', drive: 'Quattro', damage: 28000, damageDetail: 'Arka tampon değişen, bagaj altı boyalı', seller: 'Galeri', score: 70, accident: true },
+    94→  { id: 15, brand: 'Dacia', model: 'Duster', year: 2024, km: 5000, fuel: 'LPG', trans: 'Manuel', price: 680000, city: 'Sakarya', color: 'Turuncu', body: 'SUV', hp: 100, engine: '1.0 ECO-G', drive: 'Önden Çekiş', damage: 0, damageDetail: 'Hasarsız', seller: 'Bireysel', score: 86, accident: false },
+    95→  { id: 16, brand: 'Volvo', model: 'XC40', year: 2022, km: 42000, fuel: 'Benzin', trans: 'Otomatik', price: 1280000, city: 'İstanbul', color: 'Bordo', body: 'SUV', hp: 163, engine: 'B4 Mild Hybrid', drive: 'Önden Çekiş', damage: 3000, damageDetail: 'Arka çamurluk hafif boya', seller: 'Galeri', score: 88, accident: false },
+    96→  { id: 17, brand: 'Opel', model: 'Astra', year: 2023, km: 20000, fuel: 'Benzin', trans: 'Otomatik', price: 810000, city: 'Bursa', color: 'Beyaz', body: 'Hatchback', hp: 130, engine: '1.2 Turbo', drive: 'Önden Çekiş', damage: 0, damageDetail: 'Hasarsız', seller: 'Bireysel', score: 90, accident: false },
+    97→  { id: 18, brand: 'Seat', model: 'Leon', year: 2022, km: 53000, fuel: 'Dizel', trans: 'Otomatik', price: 830000, city: 'Muğla', color: 'Mavi', body: 'Hatchback', hp: 150, engine: '2.0 TDI', drive: 'Önden Çekiş', damage: 15000, damageDetail: 'Ön tampon boyalı, kaput boyalı', seller: 'Galeri', score: 74, accident: true },
+    98→  { id: 19, brand: 'Nissan', model: 'Qashqai', year: 2022, km: 58000, fuel: 'Benzin', trans: 'Otomatik', price: 940000, city: 'Mersin', color: 'Gri', body: 'SUV', hp: 158, engine: '1.3 DiG-T', drive: 'Önden Çekiş', damage: 8000, damageDetail: 'Sağ arka kapı boyalı', seller: 'Galeri', score: 83, accident: false },
+    99→  { id: 20, brand: 'Mazda', model: 'CX-5', year: 2021, km: 88000, fuel: 'Dizel', trans: 'Otomatik', price: 1050000, city: 'Ankara', color: 'Kırmızı', body: 'SUV', hp: 150, engine: '2.2 SkyActiv-D', drive: 'AWD', damage: 22000, damageDetail: 'Sağ taraf boyalı', seller: 'Bireysel', score: 68, accident: true },
+   100→]
+   101→
+   102→/* ─── Types ─── */
+   103→interface Filters {
+   104→  brand: string; model: string; yearMin: number; yearMax: number;
+   105→  kmMin: number; kmMax: number; priceMin: number; priceMax: number;
+   106→  fuelTypes: string[]; transTypes: string[]; bodyTypes: string[];
+   107→  colors: string[]; cities: string[]; damageLimit: number;
+   108→  accident: string; tradeOk: string; authorizedService: string;
+   109→  hpMin: number; hpMax: number; engineMin: number; engineMax: number;
+   110→  driveTypes: string[]; sellerType: string; hasEkspertiz: string;
+   111→  minPhotoCount: number; guarantee: string; plateCity: string;
+   112→  colorGroup: string; trimming: string[]; safetyFeatures: string[];
+   113→  ageLimit: string; ownershipMax: string; citySearch: string;
+   114→}
+   115→
+   116→/* ─── Sahiplik Maliyeti Hesaplayıcı Bileşeni ─── */
+   117→function OwnershipCalc() {
+   118→  const [year, setYear] = useState(2022)
+   119→  const [engineCc, setEngineCc] = useState(1400)
+   120→  const [fuelType, setFuelType] = useState('Benzin')
+   121→  const [avgFuel, setAvgFuel] = useState(7)
+   122→  const [yearlyKm, setYearlyKm] = useState(15000)
+   123→  const [price, setPrice] = useState(1000000)
+   124→
+   125→  const currentYear = new Date().getFullYear()
+   126→  const age = currentYear - year
+   127→
+   128→  // MTV hesaplama
+   129→  const engineBand = engineCc <= 1300 ? '0-1300' : engineCc <= 1600 ? '1301-1600' : engineCc <= 1800 ? '1601-1800' : engineCc <= 2000 ? '1801-2000' : engineCc <= 2500 ? '2001-2500' : '2501+'
+   130→  const ageBand = age <= 3 ? '1' : age <= 5 ? '2' : '3'
+   131→  const mtvTable: Record<string, number> = {
+   132→    '0-1300_1': 1313, '1301-1600_1': 2280, '1601-1800_1': 4560, '1801-2000_1': 7297, '2001-2500_1': 14595, '2501+_1': 25542,
+   133→    '0-1300_2': 985, '1301-1600_2': 1710, '1601-1800_2': 3420, '1801-2000_2': 5473, '2001-2500_2': 10946, '2501+_2': 19156,
+   134→    '0-1300_3': 656, '1301-1600_3': 1140, '1601-1800_3': 2280, '1801-2000_3': 3648, '2001-2500_3': 7297, '2501+_3': 12771,
+   135→  }
+   136→  const mtv = mtvTable[`${engineBand}_${ageBand}`] || 1500
+   137→  const kasko = Math.round(price * (age <= 2 ? 0.055 : age <= 5 ? 0.04 : 0.03))
+   138→  const fuelPrices: Record<string, number> = { 'Benzin': 42.5, 'Dizel': 40.0, 'LPG': 22.0, 'Hibrit': 42.5, 'Elektrik': 0 }
+   139→  const yearlyFuel = fuelType === 'Elektrik' ? Math.round(15 * 2.5 * yearlyKm / 100) : Math.round(avgFuel * (fuelPrices[fuelType] || 42.5) * yearlyKm / 100)
+   140→  const yearlyMaintenance = age <= 3 ? 5000 : age <= 7 ? 8000 : 12000
+   141→  const yearlyTotal = mtv + kasko + yearlyFuel + yearlyMaintenance
+   142→  const monthlyTotal = Math.round(yearlyTotal / 12)
+   143→
+   144→  return (
+   145→    <div>
+   146→      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
+   147→        <div>
+   148→          <label className="text-[10px] text-slate-500 block mb-1">Model Yılı</label>
+   149→          <input type="number" value={year} onChange={e => setYear(Number(e.target.value))} min={2000} max={2026} className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-[#e37224]" />
+   150→        </div>
+   151→        <div>
+   152→          <label className="text-[10px] text-slate-500 block mb-1">Motor Hacmi (cc)</label>
+   153→          <input type="number" value={engineCc} onChange={e => setEngineCc(Number(e.target.value))} min={800} max={5000} step={100} className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-[#e37224]" />
+   154→        </div>
+   155→        <div>
+   156→          <label className="text-[10px] text-slate-500 block mb-1">Yakıt Tipi</label>
+   157→          <select value={fuelType} onChange={e => setFuelType(e.target.value)} className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-[#e37224] appearance-none">
+   158→            {['Benzin', 'Dizel', 'LPG', 'Hibrit', 'Elektrik'].map(f => <option key={f} value={f}>{f}</option>)}
+   159→          </select>
+   160→        </div>
+   161→        <div>
+   162→          <label className="text-[10px] text-slate-500 block mb-1">Ort. Yakıt (lt/100km)</label>
+   163→          <input type="number" value={avgFuel} onChange={e => setAvgFuel(Number(e.target.value))} min={1} max={25} step={0.5} className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-[#e37224]" />
+   164→        </div>
+   165→        <div>
+   166→          <label className="text-[10px] text-slate-500 block mb-1">Yıllık KM</label>
+   167→          <input type="number" value={yearlyKm} onChange={e => setYearlyKm(Number(e.target.value))} min={1000} max={100000} step={1000} className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-[#e37224]" />
+   168→        </div>
+   169→        <div>
+   170→          <label className="text-[10px] text-slate-500 block mb-1">Araç Fiyatı (TL)</label>
+   171→          <input type="number" value={price} onChange={e => setPrice(Number(e.target.value))} min={100000} max={50000000} step={50000} className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-[#e37224]" />
+   172→        </div>
+   173→      </div>
+   174→      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+   175→        {[
+   176→          { label: 'MTV', amount: mtv },
+   177→          { label: 'Kasko (tahmini)', amount: kasko },
+   178→          { label: 'Yakıt', amount: yearlyFuel },
+   179→          { label: 'Bakım + Lastik', amount: yearlyMaintenance },
+   180→        ].map(item => (
+   181→          <div key={item.label} className="bg-white rounded-lg border border-slate-200 p-2.5 text-center">
+   182→            <span className="text-[9px] text-slate-500 block">{item.label}</span>
+   183→            <span className="text-sm font-bold text-slate-800">{item.amount.toLocaleString('tr-TR')} TL</span>
+   184→          </div>
+   185→        ))}
+   186→      </div>
+   187→      <div className="mt-4 bg-gradient-to-r from-[#e37224]/10 to-[#c85e1a]/10 border border-[#f09040]/30 rounded-xl p-4 text-center">
+   188→        <span className="text-xs text-slate-500 block">Yıllık Toplam Maliyet</span>
+   189→        <span className="text-2xl font-extrabold text-[#c85e1a]">{yearlyTotal.toLocaleString('tr-TR')} TL</span>
+   190→        <span className="text-xs text-slate-500 block mt-1">Aylık: <span className="font-bold text-slate-700">{monthlyTotal.toLocaleString('tr-TR')} TL</span></span>
+   191→      </div>
+   192→    </div>
+   193→  )
+   194→}
+   195→
+   196→const defaultFilters: Filters = {
+   197→  brand: '', model: '', yearMin: 2010, yearMax: 2026,
+   198→  kmMin: 0, kmMax: 500000, priceMin: 0, priceMax: 5000000,
+   199→  fuelTypes: [], transTypes: [], bodyTypes: [], colors: [], cities: [],
+   200→  damageLimit: 50000, accident: 'farketmez', tradeOk: 'farketmez',
+   201→  authorizedService: 'farketmez', hpMin: 0, hpMax: 500,
+   202→  engineMin: 0, engineMax: 5000, driveTypes: [], sellerType: 'farketmez',
+   203→  hasEkspertiz: 'farketmez', minPhotoCount: 0,
+   204→  guarantee: 'farketmez', plateCity: '', colorGroup: '',
+   205→  trimming: [], safetyFeatures: [], ageLimit: 'farketmez',
+   206→  ownershipMax: 'farketmez', citySearch: '',
+   207→}
+   208→
+   209→const FUEL_TYPES = ['Benzin', 'Dizel', 'LPG', 'Hibrit', 'Elektrik', 'Benzin + LPG', 'Dizel + LPG']
+   210→const TRANS_TYPES = ['Manuel', 'Otomatik', 'Yarı Otomatik', 'CVT', 'DSG', 'e-CVT']
+   211→const BODY_TYPES = ['Sedan', 'Hatchback', 'SUV', 'Station Wagon', 'Cabrio', 'Pickup', 'MPV', 'Coupe', 'Van', 'Kamyonet', 'Minibüs', 'Crossover']
+   212→const DRIVE_TYPES = ['Önden Çekiş', 'Arkadan İtiş', '4WD', 'AWD', 'Quattro', 'xDrive', '4MATIC']
+   213→const TRIMMING = ['Full', 'Highline', 'Comfortline', 'Trendline', 'Elegance', 'Avantgarde', 'Sport', 'Style', 'Life', 'Adventure']
+   214→const SAFETY = ['ABS', 'ESP', 'Airbag', 'Yokuş Kalkış Desteği', 'Şerit Takip', 'Çarpışma Önleme', 'Geri Görüş Kamerası', 'Park Sensörü', 'Adaptif Cruise', 'Ölü Nokta Uyarı']
+   215→
+   216→/* ─── Web Search Result Type ─── */
+   217→interface WebResult {
+   218→  id: string; title: string; price: string; url: string;
+   219→  source: string; snippet: string; date: string;
+   220→  hostName: string; favicon: string;
+   221→}
+   222→
+   223→/* ─── Contact Info Type ─── */
+   224→interface ContactInfo {
+   225→  phone: string[];
+   226→  address: string;
+   227→  sellerName: string;
+   228→  sellerType: string;
+   229→  email: string;
+   230→  website: string;
+   231→  location: string;
+   232→  workingHours: string;
+   233→}
+   234→
+   235→interface ContactState {
+   236→  loading: boolean;
+   237→  data: ContactInfo | null;
+   238→  hasContact: boolean;
+   239→  show: boolean;
+   240→}
+   241→
+   242→/* ─── Helper ─── */
+   243→function formatPrice(n: number) { return n.toLocaleString('tr-TR') + ' TL' }
+   244→function formatKm(n: number) { return n.toLocaleString('tr-TR') + ' km' }
+   245→
+   246→function getSourceColor(source: string) {
+   247→  if (source.includes('sahibinden')) return 'bg-blue-50 text-blue-600 border-blue-200'
+   248→  if (source.includes('arabam')) return 'bg-green-50 text-green-600 border-green-200'
+   249→  if (source.includes('letgo')) return 'bg-purple-50 text-purple-600 border-purple-200'
+   250→  return 'bg-slate-100 text-slate-600 border-slate-200'
+   251→}
+   252→
+   253→/* ─── Sıralanabilir Başlık Bileşeni ─── */
+   254→const SORT_COLUMNS: { key: any; label: string; width: string }[] = [
+   255→  { key: 'model', label: 'Model', width: 'w-[110px] min-w-[90px]' },
+   256→  { key: 'title', label: 'İlan Başlığı', width: 'flex-1 min-w-[160px]' },
+   257→  { key: 'year', label: 'Yıl', width: 'w-[60px] min-w-[50px]' },
+   258→  { key: 'km', label: 'KM', width: 'w-[85px] min-w-[70px]' },
+   259→  { key: 'color', label: 'Renk', width: 'w-[75px] min-w-[60px]' },
+   260→  { key: 'price', label: 'Fiyat', width: 'w-[130px] min-w-[100px]' },
+   261→  { key: 'date', label: 'İlan Tarihi', width: 'w-[100px] min-w-[85px]' },
+   262→  { key: 'city', label: 'İl / İlçe', width: 'w-[110px] min-w-[90px]' },
+   263→]
+   264→
+   265→function SortableHeader({ sortField, sortDir, onSort }: { sortField: any; sortDir: any; onSort: (f: any) => void }) {
+   266→  return (
+   267→    <div className="flex items-stretch bg-slate-50 border border-slate-200 rounded-t-xl text-[10px] font-bold text-slate-500 uppercase tracking-wider select-none">
+   268→      {SORT_COLUMNS.map(col => (
+   269→        <button
+   270→          key={col.key}
+   271→          onClick={() => onSort(col.key)}
+   272→          className={`${col.width} px-2.5 py-2.5 text-left flex items-center gap-1 hover:text-[#c85e1a] transition-colors border-r border-slate-100 last:border-r-0`}
+   273→        >
+   274→          <span className="truncate">{col.label}</span>
+   275→          {sortField === col.key ? (
+   276→            sortDir === 'asc' ? <ChevronUp size={10} className="text-[#e37224] shrink-0" /> : <ChevronDown size={10} className="text-[#e37224] shrink-0" />
+   277→          ) : (
+   278→            <ArrowUpDown size={9} className="text-slate-400 shrink-0 opacity-40" />
+   279→          )}
+   280→        </button>
+   281→      ))}
+   282→    </div>
+   283→  )
+   284→}
+   285→
+   286→/* ─── Veri Çıkarma Yardımcıları ─── */
+   287→function extractYear(text: string): number {
+   288→  const m = text.match(/\b(19[9]\d|20[0-2]\d)\b/)
+   289→  return m ? parseInt(m[1]) : 0
+   290→}
+   291→function extractKm(text: string): number {
+   292→  const m = text.match(/([\d.,]+)\s*km/i)
+   293→  return m ? parseInt(m[1].replace(/\./g, '').replace(',', '')) : 0
+   294→}
+   295→function extractColor(text: string): string {
+   296→  const colors = ['Beyaz', 'Siyah', 'Gri', 'Kırmızı', 'Mavi', 'Lacivert', 'Yeşil', 'Bordo', 'Turuncu', 'Bej', 'Gümüş', 'Kahverengi', 'Mor', 'Sarı', 'Füme']
+   297→  for (const c of colors) { if (text.toLowerCase().includes(c.toLowerCase())) return c }
+   298→  return '-'
+   299→}
+   300→function extractCity(text: string): string {
+   301→  const cities = ['İstanbul', 'Ankara', 'İzmir', 'Bursa', 'Antalya', 'Adana', 'Konya', 'Gaziantep', 'Kocaeli', 'Mersin', 'Kayseri', 'Eskişehir', 'Sakarya', 'Muğla', 'Denizli', 'Malatya', 'Trabzon', 'Samsun', 'Diyarbakır', 'Tekirdağ']
+   302→  for (const c of cities) { if (text.includes(c)) return c }
+   303→  return '-'
+   304→}
+   305→
+   306→/* ─── Section Wrapper ─── */
+   307→function Section({ children, className = '', id = '' }: { children: React.ReactNode; className?: string; id?: string }) {
+   308→  const ref = useRef(null)
+   309→  const inView = useInView(ref, { once: true, margin: '-60px' })
+   310→  return (
+   311→    <motion.section id={id} ref={ref} initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6 }} className={className}>{children}</motion.section>
+   312→  )
+   313→}
+   314→
+   315→/* ─── Multi Select Chip ─── */
+   316→function ChipSelect({ options, selected, onToggle, maxShow }: { options: string[]; selected: string[]; onToggle: (v: string) => void; maxShow?: number }) {
+   317→  const [showAll, setShowAll] = useState(false)
+   318→  const displayed = maxShow && !showAll ? options.slice(0, maxShow) : options
+   319→  return (
+   320→    <div>
+   321→      <div className="flex flex-wrap gap-1.5">
+   322→        {displayed.map(o => (
+   323→          <button key={o} onClick={() => onToggle(o)}
+   324→            className={`text-xs px-2.5 py-1 rounded-full border transition-all ${selected.includes(o) ? 'bg-[#fff8f0] border-[#e37224] text-[#e37224]' : 'bg-slate-100 border-slate-200 text-slate-500 hover:border-slate-300'}`}>
+   325→            {o}
+   326→          </button>
+   327→        ))}
+   328→        {maxShow && options.length > maxShow && !showAll && (
+   329→          <button onClick={() => setShowAll(true)} className="text-[10px] px-2 py-1 text-[#e37224] hover:text-[#c85e1a]">+{options.length - maxShow} daha</button>
+   330→        )}
+   331→        {maxShow && showAll && (
+   332→          <button onClick={() => setShowAll(false)} className="text-[10px] px-2 py-1 text-[#e37224] hover:text-[#c85e1a]">Daralt</button>
+   333→        )}
+   334→      </div>
+   335→    </div>
+   336→  )
+   337→}
+   338→
+   339→/* ─── Toggle Select ─── */
+   340→function TriToggle({ value, onChange, labels }: { value: string; onChange: (v: string) => void; labels: [string, string, string] }) {
+   341→  const opts: [string, string, string] = ['evet', 'hayir', 'farketmez']
+   342→  return (
+   343→    <div className="flex gap-1">
+   344→      {opts.map((o, i) => (
+   345→        <button key={o} onClick={() => onChange(o)}
+   346→          className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${value === o ? 'bg-[#fff8f0] border-[#e37224] text-[#e37224]' : 'bg-slate-100 border-slate-200 text-slate-500 hover:border-slate-300'}`}>
+   347→          {labels[i]}
+   348→        </button>
+   349→      ))}
+   350→    </div>
+   351→  )
+   352→}
+   353→
+   354→/* ─── Range Slider ─── */
+   355→function RangeRow({ label, min, max, minVal, maxVal, step, onChangeMin, onChangeMax, prefix = '', suffix = '', icon: Icon }: {
+   356→  label: string; min: number; max: number; minVal: number; maxVal: number; step: number;
+   357→  onChangeMin: (v: number) => void; onChangeMax: (v: number) => void; prefix?: string; suffix?: string;
+   358→  icon?: any
+   359→}) {
+   360→  return (
+   361→    <div>
+   362→      <label className="text-xs text-slate-500 mb-1.5 flex items-center gap-1">
+   363→        {Icon && <Icon size={10} className="text-slate-400" />}{label}
+   364→      </label>
+   365→      <div className="flex items-center gap-2">
+   366→        <input type="number" value={minVal} onChange={e => onChangeMin(Number(e.target.value))} min={min} max={max} step={step}
+   367→          className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-[#e37224]" />
+   368→        <span className="text-slate-300 text-xs">—</span>
+   369→        <input type="number" value={maxVal} onChange={e => onChangeMax(Number(e.target.value))} min={min} max={max} step={step}
+   370→          className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-[#e37224]" />
+   371→      </div>
+   372→      <div className="text-[10px] text-slate-400 mt-1 text-center">{prefix}{minVal.toLocaleString('tr-TR')}{suffix} — {prefix}{maxVal.toLocaleString('tr-TR')}{suffix}</div>
+   373→    </div>
+   374→  )
+   375→}
+   376→
+   377→/* ════════════════════════════════════════════════ MAIN ════════════════════════════════════════════════ */
+   378→export default function Home() {
+   379→  const [chatInput, setChatInput] = useState('')
+   380→  const [chatMessages, setChatMessages] = useState<{ role: string; text: string }[]>([])
+   381→  const [filters, setFilters] = useState<Filters>({ ...defaultFilters })
+   382→  const [isScanning, setIsScanning] = useState(false)
+   383→  const [scanProgress, setScanProgress] = useState(0)
+   384→  const [results, setResults] = useState<typeof MOCK_LISTINGS>([])
+   385→  const [webResults, setWebResults] = useState<WebResult[]>([])
+   386→  const [hasSearched, setHasSearched] = useState(false)
+   387→  const [notifications, setNotifications] = useState<{ id: number; icon: any; title: string; desc: string; color: string; time: string }[]>([])
+   388→  const [favIds, setFavIds] = useState<Set<number>>(new Set())
+   389→  const [favUrls, setFavUrls] = useState<Set<string>>(new Set())
+   390→  const [showNotifPanel, setShowNotifPanel] = useState(false)
+   391→  const [activeTab, setActiveTab] = useState<'mock' | 'web'>('web')
+   392→  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+   393→    temel: true, detay: true, teknik: false, konum: false, satici: false, donanim: false, guvenlik: false, ekstra: false
+   394→  })
+   395→  const [scannedSources, setScannedSources] = useState<string[]>([])
+   396→  const [contactMap, setContactMap] = useState<Record<string, ContactState>>({})
+   397→  const [copiedPhone, setCopiedPhone] = useState<string>('')
+   398→  const notifIdRef = useRef(0)
+   399→  const [savedAlerts, setSavedAlerts] = useState<any[]>([])
+   400→  const [alertNotifs, setAlertNotifs] = useState<any[]>([])
+   401→  const [showAlertModal, setShowAlertModal] = useState(false)
+   402→  const [alertName, setAlertName] = useState('')
+   403→  const [scannerStatus, setScannerStatus] = useState<any>(null)
+   404→  const [notifTab, setNotifTab] = useState<'system' | 'alerts'>('system')
+   405→
+   406→  // ─── YENİ ÖZELLİK STATE'LERİ ───
+   407→  const [nlQuery, setNlQuery] = useState('')
+   408→  const [isNlSearching, setIsNlSearching] = useState(false)
+   409→  const [selectedInsightUrl, setSelectedInsightUrl] = useState<string | null>(null)
+   410→  const [insightData, setInsightData] = useState<any>(null)
+   411→  const [isInsightLoading, setIsInsightLoading] = useState(false)
+   412→  const [showComparePanel, setShowComparePanel] = useState(false)
+   413→  const [compareIds, setCompareIds] = useState<Set<string>>(new Set())
+   414→  const [showOwnershipCalc, setShowOwnershipCalc] = useState(false)
+   415→
+   416→  // ─── SIRALAMA STATE ───
+   417→  type SortField = 'model' | 'title' | 'year' | 'km' | 'color' | 'price' | 'date' | 'city'
+   418→  type SortDir = 'asc' | 'desc' | null
+   419→  const [sortField, setSortField] = useState<SortField | null>(null)
+   420→  const [sortDir, setSortDir] = useState<SortDir>(null)
+   421→
+   422→  const toggleSort = useCallback((field: SortField) => {
+   423→    setSortField(prev => {
+   424→      if (prev === field) {
+   425→        setSortDir(d => d === 'asc' ? 'desc' : d === 'desc' ? null : 'asc')
+   426→        return field
+   427→      }
+   428→      setSortDir('asc')
+   429→      return field
+   430→    })
+   431→    if (sortField === field && sortDir === 'desc') {
+   432→      setSortField(null)
+   433→      setSortDir(null)
+   434→    }
+   435→  }, [sortField, sortDir])
+   436→
+   437→  const updateFilter = useCallback(<K extends keyof Filters>(key: K, val: Filters[K]) => {
+   438→    setFilters(prev => ({ ...prev, [key]: val }))
+   439→  }, [])
+   440→
+   441→  const toggleArrayFilter = useCallback((key: keyof Filters, val: string) => {
+   442→    setFilters(prev => {
+   443→      const arr = (prev[key] as string[]) || []
+   444→      return { ...prev, [key]: arr.includes(val) ? arr.filter(x => x !== val) : [...arr, val] }
+   445→    })
+   446→  }, [])
+   447→
+   448→  const addNotification = useCallback((icon: any, title: string, desc: string, color: string) => {
+   449→    notifIdRef.current += 1
+   450→    const n = { id: notifIdRef.current, icon, title, desc, color, time: 'Şimdi' }
+   451→    setNotifications(prev => [n, ...prev].slice(0, 20))
+   452→  }, [])
+   453→
+   454→  const copyToClipboard = useCallback((text: string) => {
+   455→    navigator.clipboard.writeText(text).then(() => {
+   456→      setCopiedPhone(text)
+   457→      setTimeout(() => setCopiedPhone(''), 2000)
+   458→    })
+   459→  }, [])
+   460→
+   461→  const fetchContact = useCallback(async (resultId: string, url: string) => {
+   462→    if (contactMap[resultId]?.loading) return
+   463→
+   464→    setContactMap(prev => ({
+   465→      ...prev,
+   466→      [resultId]: { loading: true, data: null, hasContact: false, show: true }
+   467→    }))
+   468→
+   469→    try {
+   470→      const response = await fetch('/api/listing-detail', {
+   471→        method: 'POST',
+   472→        headers: { 'Content-Type': 'application/json' },
+   473→        body: JSON.stringify({ url }),
+   474→      })
+   475→      const data = await response.json()
+   476→
+   477→      if (data.success && data.contact) {
+   478→        setContactMap(prev => ({
+   479→          ...prev,
+   480→          [resultId]: {
+   481→            loading: false,
+   482→            data: data.contact,
+   483→            hasContact: data.hasContact,
+   484→            show: true,
+   485→          }
+   486→        }))
+   487→        if (data.hasContact) {
+   488→          addNotification(Phone, 'İletişim Bilgisi Bulundu', `${data.contact.phone.length} telefon, ${data.contact.address ? 'adres' : ''} tespit edildi`, '#22c55e')
+   489→        }
+   490→      } else {
+   491→        setContactMap(prev => ({
+   492→          ...prev,
+   493→          [resultId]: { loading: false, data: null, hasContact: false, show: true }
+   494→        }))
+   495→      }
+   496→    } catch {
+   497→      setContactMap(prev => ({
+   498→        ...prev,
+   499→        [resultId]: { loading: false, data: null, hasContact: false, show: true }
+   500→      }))
+   501→    }
+   502→  }, [contactMap, addNotification])
+   503→
+   504→  const doSearch = useCallback(async () => {
+   505→    setIsScanning(true)
+   506→    setScanProgress(0)
+   507→    setResults([])
+   508→    setWebResults([])
+   509→    setHasSearched(true)
+   510→    setScannedSources([])
+   511→
+   512→    // Simulate progress while API is working
+   513→    const progressInterval = setInterval(() => {
+   514→      setScanProgress(prev => {
+   515→        if (prev >= 90) return prev
+   516→        return prev + Math.random() * 8 + 2
+   517→      })
+   518→    }, 200)
+   519→
+   520→    // Notify scanning started
+   521→    addNotification(Search, 'Tarama Başladı', 'Türkiye genelindeki ilan siteleri taranıyor...', '#3b82f6')
+   522→
+   523→    try {
+   524→      // Call our API to do real web search
+   525→      const response = await fetch('/api/scan', {
+   526→        method: 'POST',
+   527→        headers: { 'Content-Type': 'application/json' },
+   528→        body: JSON.stringify({ filters }),
+   529→      })
+   530→
+   531→      const data = await response.json()
+   532→
+   533→      clearInterval(progressInterval)
+   534→      setScanProgress(100)
+   535→
+   536→      if (data.success && data.results) {
+   537→        setWebResults(data.results)
+   538→        setScannedSources(data.scannedSites || [])
+   539→
+   540→        // Also do local mock filtering
+   541→        const filtered = MOCK_LISTINGS.filter(v => {
+   542→          if (filters.brand && v.brand !== filters.brand) return false
+   543→          if (filters.model && v.model !== filters.model) return false
+   544→          if (v.year < filters.yearMin || v.year > filters.yearMax) return false
+   545→          if (v.km < filters.kmMin || v.km > filters.kmMax) return false
+   546→          if (v.price < filters.priceMin || v.price > filters.priceMax) return false
+   547→          if (filters.fuelTypes.length > 0 && !filters.fuelTypes.includes(v.fuel)) return false
+   548→          if (filters.transTypes.length > 0 && !filters.transTypes.includes(v.trans)) return false
+   549→          if (filters.bodyTypes.length > 0 && !filters.bodyTypes.includes(v.body)) return false
+   550→          if (filters.colors.length > 0 && !filters.colors.includes(v.color)) return false
+   551→          if (filters.cities.length > 0 && !filters.cities.includes(v.city) && !filters.cities.includes('Türkiye Geneli')) return false
+   552→          if (v.damage > filters.damageLimit) return false
+   553→          if (filters.accident === 'evet' && v.accident !== true) return false
+   554→          if (filters.accident === 'hayir' && v.accident !== false) return false
+   555→          if (filters.driveTypes.length > 0 && !filters.driveTypes.includes(v.drive)) return false
+   556→          if (filters.sellerType !== 'farketmez' && filters.sellerType === 'galeri' && v.seller !== 'Galeri') return false
+   557→          if (filters.sellerType !== 'farketmez' && filters.sellerType === 'bireysel' && v.seller !== 'Bireysel') return false
+   558→          return true
+   559→        })
+   560→        setResults(filtered)
+   561→
+   562→        const totalFound = data.results.length + filtered.length
+   563→        if (data.results.length > 0) {
+   564→          addNotification(Globe, 'İnternet Taraması Tamamlandı', `${data.results.length} gerçek ilan bulundu`, '#22c55e')
+   565→        }
+   566→        if (filtered.length > 0) {
+   567→          addNotification(Car, 'Veritabanı Sonuçları', `${filtered.length} araç veritabanında bulundu`, '#3b82f6')
+   568→        }
+   569→        if (totalFound === 0) {
+   570→          addNotification(AlertTriangle, 'Sonuç Bulunamadı', 'Kriterlerinize uygun araç şu an yok', '#ef4444')
+   571→        }
+   572→      } else {
+   573→        // Fallback to mock only
+   574→        const filtered = MOCK_LISTINGS.filter(v => {
+   575→          if (filters.brand && v.brand !== filters.brand) return false
+   576→          if (filters.model && v.model !== filters.model) return false
+   577→          if (v.year < filters.yearMin || v.year > filters.yearMax) return false
+   578→          if (v.km < filters.kmMin || v.km > filters.kmMax) return false
+   579→          if (v.price < filters.priceMin || v.price > filters.priceMax) return false
+   580→          if (filters.fuelTypes.length > 0 && !filters.fuelTypes.includes(v.fuel)) return false
+   581→          if (filters.transTypes.length > 0 && !filters.transTypes.includes(v.trans)) return false
+   582→          if (filters.bodyTypes.length > 0 && !filters.bodyTypes.includes(v.body)) return false
+   583→          if (filters.colors.length > 0 && !filters.colors.includes(v.color)) return false
+   584→          if (filters.cities.length > 0 && !filters.cities.includes(v.city) && !filters.cities.includes('Türkiye Geneli')) return false
+   585→          if (v.damage > filters.damageLimit) return false
+   586→          if (filters.accident === 'evet' && v.accident !== true) return false
+   587→          if (filters.accident === 'hayir' && v.accident !== false) return false
+   588→          if (filters.driveTypes.length > 0 && !filters.driveTypes.includes(v.drive)) return false
+   589→          return true
+   590→        })
+   591→        setResults(filtered)
+   592→        addNotification(AlertTriangle, 'İnternet Taraması Kısmen Başarılı', 'Sadece veritabanı sonuçları gösteriliyor', '#eab308')
+   593→      }
+   594→    } catch (error) {
+   595→      clearInterval(progressInterval)
+   596→      // Fallback to mock
+   597→      const filtered = MOCK_LISTINGS.filter(v => {
+   598→        if (filters.brand && v.brand !== filters.brand) return false
+   599→        if (filters.model && v.model !== filters.model) return false
+   600→        if (v.year < filters.yearMin || v.year > filters.yearMax) return false
+   601→        if (v.km < filters.kmMin || v.km > filters.kmMax) return false
+   602→        if (v.price < filters.priceMin || v.price > filters.priceMax) return false
+   603→        if (filters.fuelTypes.length > 0 && !filters.fuelTypes.includes(v.fuel)) return false
+   604→        if (filters.transTypes.length > 0 && !filters.transTypes.includes(v.trans)) return false
+   605→        if (filters.bodyTypes.length > 0 && !filters.bodyTypes.includes(v.body)) return false
+   606→        if (filters.colors.length > 0 && !filters.colors.includes(v.color)) return false
+   607→        if (filters.cities.length > 0 && !filters.cities.includes(v.city) && !filters.cities.includes('Türkiye Geneli')) return false
+   608→        if (v.damage > filters.damageLimit) return false
+   609→        if (filters.accident === 'evet' && v.accident !== true) return false
+   610→        if (filters.accident === 'hayir' && v.accident !== false) return false
+   611→        return true
+   612→      })
+   613→      setResults(filtered)
+   614→      addNotification(AlertTriangle, 'Tarama Hatası', 'İnternet taraması başarısız, yerel sonuçlar gösteriliyor', '#ef4444')
+   615→    }
+   616→
+   617→    setTimeout(() => setIsScanning(false), 300)
+   618→  }, [filters, addNotification])
+   619→
+   620→  const resetFilters = () => { setFilters({ ...defaultFilters }) }
+   621→
+   622→  // ─── DOĞAL DİL ARAMA ───
+   623→  const doNlSearch = useCallback(async () => {
+   624→    if (!nlQuery.trim() || isNlSearching) return
+   625→    setIsNlSearching(true)
+   626→    try {
+   627→      const res = await fetch('/api/nlsearch', {
+   628→        method: 'POST',
+   629→        headers: { 'Content-Type': 'application/json' },
+   630→        body: JSON.stringify({ query: nlQuery.trim() }),
+   631→      })
+   632→      const data = await res.json()
+   633→      if (data.success && data.filters) {
+   634→        setFilters(prev => ({ ...prev, ...data.filters }))
+   635→        addNotification(Sparkles, 'AI Filtre Uygulandı', `"${nlQuery.trim()}" cümlesi filtrelere dönüştürüldü`, '#e37224')
+   636→        setNlQuery('')
+   637→      } else {
+   638→        addNotification(AlertTriangle, 'AI Arama Hatası', data.error || 'Filtre oluşturulamadı', '#ef4444')
+   639→      }
+   640→    } catch {
+   641→      addNotification(AlertTriangle, 'AI Arama Hatası', 'Bağlantı hatası', '#ef4444')
+   642→    }
+   643→    setIsNlSearching(false)
+   644→  }, [nlQuery, isNlSearching, addNotification])
+   645→
+   646→  // ─── İLAN AI ANALİZİ ───
+   647→  const fetchInsight = useCallback(async (result: any) => {
+   648→    setSelectedInsightUrl(result.url)
+   649→    setIsInsightLoading(true)
+   650→    try {
+   651→      const res = await fetch('/api/listing-insight', {
+   652→        method: 'POST',
+   653→        headers: { 'Content-Type': 'application/json' },
+   654→        body: JSON.stringify({
+   655→          title: result.title,
+   656→          price: result.price,
+   657→          brand: result.brand || filters.brand,
+   658→          model: result.model || filters.model,
+   659→          year: filters.yearMin > 2010 ? filters.yearMin : undefined,
+   660→          city: filters.cities?.[0],
+   661→          description: result.snippet,
+   662→        }),
+   663→      })
+   664→      const data = await res.json()
+   665→      if (data.success) {
+   666→        setInsightData(data)
+   667→      } else {
+   668→        setInsightData({ summary: ['AI analizi şu an mevcut değil'], questions: [], negotiation: { suggestion: '', maxPrice: 0, template: '' } })
+   669→      }
+   670→    } catch {
+   671→      setInsightData({ summary: ['API bağlantı hatası'], questions: [], negotiation: { suggestion: '', maxPrice: 0, template: '' } })
+   672→    }
+   673→    setIsInsightLoading(false)
+   674→  }, [filters])
+   675→
+   676→  // ─── KARŞILAŞTIRMA ───
+   677→  const toggleCompare = useCallback((id: string) => {
+   678→    setCompareIds(prev => {
+   679→      const next = new Set(prev)
+   680→      if (next.has(id)) next.delete(id)
+   681→      else if (next.size < 4) next.add(id)
+   682→      return next
+   683→    })
+   684→  }, [])
+   685→
+   686→  /* ─── Alert / Notification API Functions ─── */
+   687→  const fetchAlerts = useCallback(async () => {
+   688→    try {
+   689→      const res = await fetch('/api/alerts')
+   690→      const data = await res.json()
+   691→      if (data.success) setSavedAlerts(data.alerts || [])
+   692→    } catch { /* silent */ }
+   693→  }, [])
+   694→
+   695→  const fetchAlertNotifications = useCallback(async () => {
+   696→    try {
+   697→      const res = await fetch('/api/notifications')
+   698→      const data = await res.json()
+   699→      if (data.success) setAlertNotifs(data.notifications || [])
+   700→    } catch { /* silent */ }
+   701→  }, [])
+   702→
+   703→  const fetchScannerStatus = useCallback(async () => {
+   704→    try {
+   705→      // Compute scanner status from alerts data instead of mini-service
+   706→      const activeCount = savedAlerts.filter((a: any) => a.isActive).length
+   707→      const unreadCount = alertNotifs.length
+   708→      setScannerStatus({
+   709→        status: activeCount > 0 ? 'running' : 'idle',
+   710→        activeAlerts: activeCount,
+   711→        unreadNotifications: unreadCount,
+   712→        intervalMinutes: 10,
+   713→        isScanning: false,
+   714→      })
+   715→    } catch { /* silent */ }
+   716→  }, [savedAlerts, alertNotifs])
+   717→
+   718→  const saveAlert = useCallback(async () => {
+   719→    if (!alertName.trim()) return
+   720→    try {
+   721→      const res = await fetch('/api/alerts', {
+   722→        method: 'POST',
+   723→        headers: { 'Content-Type': 'application/json' },
+   724→        body: JSON.stringify({ name: alertName.trim(), filters, intervalMinutes: 10 }),
+   725→      })
+   726→      const data = await res.json()
+   727→      if (data.success) {
+   728→        setAlertName('')
+   729→        setShowAlertModal(false)
+   730→        addNotification(BellRing, 'Bildirim Oluşturuldu', `"${alertName.trim()}" filtresi arka planda takibe alındı`, '#e37224')
+   731→        fetchAlerts()
+   732→      }
+   733→    } catch { /* silent */ }
+   734→  }, [alertName, filters, addNotification, fetchAlerts])
+   735→
+   736→  const deleteAlert = useCallback(async (id: string) => {
+   737→    try {
+   738→      await fetch(`/api/alerts?id=${id}`, { method: 'DELETE' })
+   739→      addNotification(Trash2, 'Bildirim Silindi', 'Filtre takibi kaldırıldı', '#ef4444')
+   740→      fetchAlerts()
+   741→      fetchAlertNotifications()
+   742→    } catch { /* silent */ }
+   743→  }, [addNotification, fetchAlerts, fetchAlertNotifications])
+   744→
+   745→  const toggleAlert = useCallback(async (id: string) => {
+   746→    try {
+   747→      await fetch('/api/alerts', {
+   748→        method: 'PUT',
+   749→        headers: { 'Content-Type': 'application/json' },
+   750→        body: JSON.stringify({ alertId: id, action: 'toggle' }),
+   751→      })
+   752→      fetchAlerts()
+   753→    } catch { /* silent */ }
+   754→  }, [fetchAlerts])
+   755→
+   756→  const triggerScan = useCallback(async () => {
+   757→    try {
+   758→      addNotification(AlarmClock, 'Tarama Başlatıldı', 'Tüm aktif filtreler taranıyor...', '#3b82f6')
+   759→      const res = await fetch('/api/alerts', {
+   760→        method: 'PUT',
+   761→        headers: { 'Content-Type': 'application/json' },
+   762→        body: JSON.stringify({ action: 'scan-all' }),
+   763→      })
+   764→      const data = await res.json()
+   765→      if (data.success) {
+   766→        addNotification(CheckCircle2, 'Tarama Tamamlandı', `${data.totalNew} yeni ilan bulundu (${data.scannedAlerts} filtre tarandı)`, '#22c55e')
+   767→        fetchAlerts()
+   768→        fetchAlertNotifications()
+   769→      } else {
+   770→        addNotification(AlertTriangle, 'Tarama Hatası', data.error || 'Tarama başarısız', '#ef4444')
+   771→      }
+   772→    } catch {
+   773→      addNotification(AlertTriangle, 'Tarama Hatası', 'Bağlantı hatası', '#ef4444')
+   774→    }
+   775→  }, [addNotification, fetchAlerts, fetchAlertNotifications])
+   776→
+   777→  const markNotifRead = useCallback(async (id: string) => {
+   778→    try {
+   779→      await fetch('/api/notifications', {
+   780→        method: 'PUT',
+   781→        headers: { 'Content-Type': 'application/json' },
+   782→        body: JSON.stringify({ notificationId: id }),
+   783→      })
+   784→      fetchAlertNotifications()
+   785→    } catch { /* silent */ }
+   786→  }, [fetchAlertNotifications])
+   787→
+   788→  const markAllRead = useCallback(async () => {
+   789→    try {
+   790→      await fetch('/api/notifications', {
+   791→        method: 'PUT',
+   792→        headers: { 'Content-Type': 'application/json' },
+   793→        body: JSON.stringify({ markAllRead: true }),
+   794→      })
+   795→      fetchAlertNotifications()
+   796→    } catch { /* silent */ }
+   797→  }, [fetchAlertNotifications])
+   798→
+   799→  const sendChat = () => {
+   800→    if (!chatInput.trim()) return
+   801→    const userMsg = chatInput.trim()
+   802→    setChatMessages(prev => [...prev, { role: 'user', text: userMsg }])
+   803→    setChatInput('')
+   804→    setTimeout(() => {
+   805→      const isBudget = userMsg.includes("bütçe") || userMsg.includes("milyon")
+   806→      const aiText = isBudget
+   807→        ? "Harika soru! 1 milyon TL bütçeye göre size en uygun aile araçlarını analiz ediyorum: 2022 Skoda Octavia 1.5 TSI (950K-1.05M TL), 2021 Toyota Corolla Hybrid (920K-1.08M TL) ve 2022 Hyundai Tucson 1.6 CRDi (980K-1.1M TL) öneriyorum. Şehir içi kullanım için Corolla Hybrid en ekonomik, uzun yol için Tucson ideal."
+   808→        : "Araç tercihlerinize göre detaylı analiz hazırlıyorum. Size en uygun modelleri, kronik sorunları ve yıllık maliyet tahminlerini sunacağım."
+   809→      setChatMessages(prev => [...prev, { role: "ai", text: aiText }])
+   810→    }, 1200)
+   811→  }
+   812→
+   813→  const toggleSection = (key: string) => setExpandedSections(prev => ({ ...prev, [key]: !prev[key] }))
+   814→
+   815→  /* ─── Alert polling + auto-scan useEffect ─── */
+   816→  useEffect(() => {
+   817→    let mounted = true
+   818→    const loadAll = async () => {
+   819→      if (!mounted) return
+   820→      try {
+   821→        const [alertsRes, notifsRes] = await Promise.all([
+   822→          fetch('/api/alerts'),
+   823→          fetch('/api/notifications'),
+   824→        ])
+   825→        if (!mounted) return
+   826→        const [alertsData, notifsData] = await Promise.all([
+   827→          alertsRes.json(),
+   828→          notifsRes.json(),
+   829→        ])
+   830→        if (!mounted) return
+   831→        if (alertsData.success) setSavedAlerts(alertsData.alerts || [])
+   832→        if (notifsData.success) setAlertNotifs(notifsData.notifications || [])
+   833→      } catch { /* silent */ }
+   834→    }
+   835→    loadAll()
+   836→    // Poll alerts & notifications every 30s
+   837→    const pollInterval = setInterval(loadAll, 30000)
+   838→
+   839→    // Auto-scan all active alerts every 10 minutes (600000ms)
+   840→    const autoScan = async () => {
+   841→      if (!mounted) return
+   842→      try {
+   843→        await fetch('/api/alerts', {
+   844→          method: 'PUT',
+   845→          headers: { 'Content-Type': 'application/json' },
+   846→          body: JSON.stringify({ action: 'scan-all' }),
+   847→        })
+   848→        loadAll() // refresh notifications after scan
+   849→      } catch { /* silent */ }
+   850→    }
+   851→    // First auto-scan after 60 seconds, then every 10 minutes
+   852→    const initialScanTimeout = setTimeout(() => {
+   853→      autoScan()
+   854→      const scanInterval = setInterval(autoScan, 600000)
+   855→      // Store for cleanup
+   856→      return () => clearInterval(scanInterval)
+   857→    }, 60000)
+   858→
+   859→    return () => {
+   860→      mounted = false
+   861→      clearInterval(pollInterval)
+   862→      clearTimeout(initialScanTimeout)
+   863→    }
+   864→  }, [])
+   865→
+   866→  /* ─── Auto-suggest alert name ─── */
+   867→  const suggestedAlertName = filters.brand
+   868→    ? `${filters.brand}${filters.model ? ' ' + filters.model : ''} Takibi`
+   869→    : ''
+   870→
+   871→  const activeFilterCount = [
+   872→    filters.brand, filters.fuelTypes.length, filters.transTypes.length, filters.bodyTypes.length,
+   873→    filters.colors.length, filters.cities.length, filters.driveTypes.length,
+   874→    filters.accident !== 'farketmez', filters.tradeOk !== 'farketmez', filters.authorizedService !== 'farketmez',
+   875→    filters.sellerType !== 'farketmez', filters.hasEkspertiz !== 'farketmez',
+   876→    filters.damageLimit < 50000, filters.minPhotoCount > 0,
+   877→    filters.guarantee !== 'farketmez', filters.plateCity,
+   878→    filters.trimming.length, filters.safetyFeatures.length,
+   879→    filters.ageLimit !== 'farketmez', filters.ownershipMax !== 'farketmez',
+   880→  ].filter(Boolean).length
+   881→
+   882→  const totalResults = webResults.length + results.length
+   883→
+   884→  return (
+   885→    <div className="min-h-screen bg-[#f8fafc] text-slate-900">
+   886→      {/* ═══ FLOATING NOTIFICATION BELL ═══ */}
+   887→      <div className="fixed top-16 right-4 z-40 flex items-center gap-2">
+   888→        {savedAlerts.filter(a => a.isActive).length > 0 && (
+   889→          <div className="hidden sm:flex items-center gap-1.5 bg-green-50 border border-green-200 rounded-full px-2 py-1 cursor-pointer" onClick={() => setShowNotifPanel(true)} title={scannerStatus?.isScanning ? 'Taranıyor...' : scannerStatus?.lastScanTime ? `Son tarama: ${new Date(scannerStatus.lastScanTime).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}` : 'Arka plan tarayıcısı aktif'}>
+   890→            <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+   891→            <span className="text-[9px] font-semibold text-green-600">{savedAlerts.filter(a => a.isActive).length}</span>
+   892→          </div>
+   893→        )}
+   894→        <button onClick={() => setShowNotifPanel(!showNotifPanel)} className="relative p-2 text-slate-500 hover:text-[#c85e1a] bg-white/80 backdrop-blur rounded-lg border border-slate-100 transition-colors">
+   895→          {alertNotifs.length > 0 ? <BellRing size={18} className="text-[#e37224]" /> : <Bell size={18} />}
+   896→          {(notifications.length > 0 || alertNotifs.length > 0) && <span className="absolute top-0.5 right-0.5 w-2 h-2 bg-[#e37224] rounded-full animate-pulse" />}
+   897→          {alertNotifs.length > 0 && <span className="absolute -top-0.5 -right-0.5 bg-[#e37224] text-white text-[7px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center">{alertNotifs.length > 9 ? '9+' : alertNotifs.length}</span>}
+   898→        </button>
+   899→      </div>
+   900→
+   901→      {/* ═══ NOTIFICATION PANEL ═══ */}
+   902→      <AnimatePresence>
+   903→        {showNotifPanel && (
+   904→          <motion.div initial={{ opacity: 0, x: 300 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 300 }}
+   905→            className="fixed top-14 right-0 w-80 max-h-[70vh] bg-white border-l border-slate-200 z-50 overflow-y-auto shadow-2xl">
+   906→            {/* Tabs */}
+   907→            <div className="p-3 border-b border-slate-200">
+   908→              <div className="flex items-center gap-2 mb-2">
+   909→                <div className="flex bg-slate-100 rounded-lg border border-slate-200 p-0.5 w-full">
+   910→                  <button onClick={() => setNotifTab('system')}
+   911→                    className={`flex-1 text-[10px] px-2 py-1.5 rounded-md font-semibold transition-all flex items-center justify-center gap-1 ${notifTab === 'system' ? 'bg-[#e37224] text-white' : 'text-slate-500 hover:text-slate-900'}`}>
+   912→                    <Bell size={10} /> Sistem {notifications.length > 0 && <span className="text-[8px] bg-white/20 px-1 rounded-full">{notifications.length}</span>}
+   913→                  </button>
+   914→                  <button onClick={() => setNotifTab('alerts')}
+   915→                    className={`flex-1 text-[10px] px-2 py-1.5 rounded-md font-semibold transition-all flex items-center justify-center gap-1 ${notifTab === 'alerts' ? 'bg-[#e37224] text-white' : 'text-slate-500 hover:text-slate-900'}`}>
+   916→                    <BellRing size={10} /> Bildirim Uyarıları {alertNotifs.length > 0 && <span className="text-[8px] bg-white/20 px-1 rounded-full">{alertNotifs.length}</span>}
+   917→                  </button>
+   918→                </div>
+   919→              </div>
+   920→              {notifTab === 'alerts' && alertNotifs.length > 0 && (
+   921→                <button onClick={markAllRead} className="text-[9px] text-slate-500 hover:text-[#c85e1a] flex items-center gap-1">
+   922→                  <EyeOff size={9} /> Tümünü Okundu İşaretle
+   923→                </button>
+   924→              )}
+   925→            </div>
+   926→            {/* System notifications tab */}
+   927→            {notifTab === 'system' && (
+   928→              <div className="p-2 space-y-1.5">
+   929→                {notifications.length === 0 ? (
+   930→                  <p className="text-center text-xs text-slate-500 py-8">Henüz bildirim yok</p>
+   931→                ) : notifications.map(n => (
+   932→                  <div key={n.id} className="flex items-center gap-2.5 bg-white rounded-lg p-2.5">
+   933→                    <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: n.color + '20' }}><n.icon size={14} style={{ color: n.color }} /></div>
+   934→                    <div className="min-w-0 flex-1"><p className="text-xs font-semibold text-slate-800 truncate">{n.title}</p><p className="text-[10px] text-slate-500 truncate">{n.desc}</p></div>
+   935→                    <span className="text-[9px] text-slate-400 shrink-0">{n.time}</span>
+   936→                  </div>
+   937→                ))}
+   938→              </div>
+   939→            )}
+   940→            {/* Alert notifications tab */}
+   941→            {notifTab === 'alerts' && (
+   942→              <div className="p-2 space-y-1.5">
+   943→                {alertNotifs.length === 0 ? (
+   944→                  <div className="text-center py-8">
+   945→                    <BellRing size={24} className="text-slate-700 mx-auto mb-2" />
+   946→                    <p className="text-xs text-slate-500">Henüz bildirim uyarısı yok</p>
+   947→                    <p className="text-[9px] text-slate-400 mt-1">Filtrelerinizi kaydederek arka planda takip edin</p>
+   948→                  </div>
+   949→                ) : alertNotifs.map(n => (
+   950→                  <div key={n.id} className="bg-slate-50 rounded-lg p-2.5 border border-slate-100 hover:border-[#f09040]/30 transition-colors">
+   951→                    <div className="flex items-start gap-2">
+   952→                      <div className="w-7 h-7 bg-[#fff8f0] rounded-lg flex items-center justify-center shrink-0 mt-0.5">
+   953→                        <span className={`text-[7px] font-bold px-1 py-0.5 rounded ${getSourceColor(n.source)}`}>{n.source?.charAt(0)?.toUpperCase() || '?'}</span>
+   954→                      </div>
+   955→                      <div className="min-w-0 flex-1">
+   956→                        <div className="flex items-center gap-1.5 mb-0.5">
+   957→                          <span className={`text-[8px] px-1.5 py-0.5 rounded-full border font-semibold ${getSourceColor(n.source || '')}`}>
+   958→                            {n.source}
+   959→                          </span>
+   960→                          {n.price && <span className="text-[9px] font-bold text-[#e37224]">{n.price}</span>}
+   961→                        </div>
+   962→                        <p className="text-[11px] font-semibold text-slate-800 line-clamp-2 leading-tight">{n.title}</p>
+   963→                        <p className="text-[9px] text-slate-500 line-clamp-2 mt-0.5">{n.snippet}</p>
+   964→                        <div className="flex items-center gap-2 mt-1.5">
+   965→                          {n.alert?.name && <span className="text-[8px] text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">{n.alert.name}</span>}
+   966→                          <span className="text-[8px] text-slate-400">{new Date(n.foundAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</span>
+   967→                          <a href={n.url} target="_blank" rel="noopener noreferrer" className="text-[8px] text-[#e37224] hover:text-[#c85e1a] ml-auto">İlana Git →</a>
+   968→                        </div>
+   969→                      </div>
+   970→                      <button onClick={() => markNotifRead(n.id)} className="p-1 text-slate-400 hover:text-green-600 transition-colors shrink-0" title="Okundu">
+   971→                        <Check size={11} />
+   972→                      </button>
+   973→                    </div>
+   974→                  </div>
+   975→                ))}
+   976→              </div>
+   977→            )}
+   978→          </motion.div>
+   979→        )}
+   980→      </AnimatePresence>
+   981→
+   982→      {/* ═══ HERO ═══ */}
+   983→      <section className="relative pt-20 pb-8 sm:pt-28 sm:pb-12 px-4 overflow-hidden bg-white">
+   984→        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] pointer-events-none">
+   985→          <div className="absolute inset-0 rounded-full bg-[#e37224]/5 blur-3xl" />
+   986→          <div className="absolute inset-16 rounded-full border border-[#e37224]/10" />
+   987→          <div className="absolute inset-[120px] rounded-full bg-[#e37224]/3 animate-radar-ping" />
+   988→        </div>
+   989→        <div className="max-w-4xl mx-auto text-center relative z-10">
+   990→          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
+   991→            <div className="flex justify-center mb-6">
+   992→              <Image
+   993→                src="/logo-v2.png"
+   994→                alt="OtoDedektif"
+   995→                width={380}
+   996→                height={213}
+   997→                className="h-24 sm:h-28 w-auto drop-shadow-lg"
+   998→                priority
+   999→              />
+  1000→            </div>
+  1001→            <div className="inline-flex items-center gap-2 bg-[#fff8f0] border border-[#e37224]/20 rounded-full px-3 py-1 mb-4">
+  1002→              <Sparkles size={12} className="text-[#e37224]" /><span className="text-[10px] font-medium text-[#c85e1a]">Yapay Zeka Destekli</span>
+  1003→            </div>
+  1004→            <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold leading-tight mb-4 text-[#0f2a48]">
+  1005→              İlanları siz aramayın,<br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-[#f09040] to-[#e37224]">size gelsin.</span>
+  1006→            </h1>
+  1007→            <p className="text-sm sm:text-base text-slate-500 max-w-xl mx-auto mb-6">Türkiye&apos;nin her yerinden araç ilanlarını 7/24 tarayan, filtreleyen ve size bildiren akıllı asistanınız.</p>
+  1008→            <a href="#avmodu" className="inline-flex items-center gap-2 bg-gradient-to-r from-[#e37224] to-[#c85e1a] hover:from-[#c85e1a] hover:to-[#a84f14] text-white font-bold px-6 py-3 rounded-xl transition-all shadow-md shadow-[#e37224]/25">
+  1009→              <Target size={18} /> Araç Av Moduna Geç
+  1010→            </a>
+  1011→          </motion.div>
+  1012→        </div>
+  1013→      </section>
+  1014→
+  1015→      {/* ═══════════════ ARAÇ AV MODU ═══════════════ */}
+  1016→      <Section id="avmodu" className="py-8 sm:py-12 px-4 bg-white">
+  1017→        <div className="max-w-7xl mx-auto">
+  1018→          <div className="flex items-center gap-3 mb-6">
+  1019→            <div className="w-10 h-10 bg-[#fff8f0] rounded-xl flex items-center justify-center"><Target size={22} className="text-[#e37224]" /></div>
+  1020→            <div>
+  1021→              <h2 className="text-xl sm:text-2xl font-extrabold text-[#0f2a48]">Araç Av Modu</h2>
+  1022→              <p className="text-xs text-slate-500">Aklınıza gelen her kriteri seçin, sistem tüm Türkiye&apos;yi tarasın</p>
+  1023→            </div>
+  1024→          </div>
+  1025→
+  1026→          {/* ─── NL ARAMA ÇUBUĞU ─── */}
+  1027→          <div className="mb-5">
+  1028→            <div className="bg-white border border-slate-200 rounded-xl p-3">
+  1029→              <div className="flex items-center gap-2">
+  1030→                <Sparkles size={16} className="text-[#e37224] shrink-0" />
+  1031→                <input
+  1032→                  type="text"
+  1033→                  value={nlQuery}
+  1034→                  onChange={e => setNlQuery(e.target.value)}
+  1035→                  onKeyDown={e => e.key === 'Enter' && doNlSearch()}
+  1036→                  placeholder={'Doğal dilde arayın... ör: "İstanbul\'da 400 bin altı otomatik dizel SUV"'}
+  1037→                  className="flex-1 bg-transparent border-none text-sm text-slate-900 placeholder-slate-400 focus:outline-none"
+  1038→                />
+  1039→                <button
+  1040→                  onClick={doNlSearch}
+  1041→                  disabled={isNlSearching || !nlQuery.trim()}
+  1042→                  className="bg-gradient-to-r from-[#e37224] to-[#c85e1a] hover:from-[#c85e1a] hover:to-[#a84f14] text-white font-bold px-4 py-1.5 rounded-lg text-xs transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
+  1043→                >
+  1044→                  {isNlSearching ? <Loader2 size={12} className="animate-spin" /> : <Sparkle size={12} />}
+  1045→                  AI ile Ara
+  1046→                </button>
+  1047→              </div>
+  1048→            </div>
+  1049→          </div>
+  1050→
+  1051→          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+  1052→            {/* ─── FILTER PANEL ─── */}
+  1053→            <div className="lg:col-span-5 xl:col-span-4 space-y-3">
+  1054→              <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+  1055→                {/* Header */}
+  1056→                <div className="flex items-center justify-between p-3 border-b border-slate-100">
+  1057→                  <div className="flex items-center gap-2">
+  1058→                    <SlidersHorizontal size={14} className="text-[#e37224]" />
+  1059→                    <span className="text-sm font-semibold text-slate-900">Filtreler</span>
+  1060→                    {activeFilterCount > 0 && <span className="bg-[#fff8f0] text-[#c85e1a] text-[10px] font-bold px-1.5 py-0.5 rounded-full">{activeFilterCount} aktif</span>}
+  1061→                  </div>
+  1062→                  <button onClick={resetFilters} className="text-[10px] text-slate-500 hover:text-[#c85e1a] flex items-center gap-1"><RotateCcw size={10} /> Sıfırla</button>
+  1063→                </div>
+  1064→
+  1065→                <div className="p-3 space-y-3 max-h-[70vh] overflow-y-auto">
+  1066→                  {/* TEMEL BİLGİLER */}
+  1067→                  <div className="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden">
+  1068→                    <button onClick={() => toggleSection('temel')} className="w-full flex items-center justify-between p-3 text-xs font-semibold text-slate-700 hover:text-[#c85e1a] transition-colors">
+  1069→                      <span className="flex items-center gap-1.5"><CarFront size={12} className="text-[#e37224]" /> Temel Bilgiler</span>{expandedSections.temel ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+  1070→                    </button>
+  1071→                    <AnimatePresence>
+  1072→                      {expandedSections.temel && (
+  1073→                        <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden">
+  1074→                          <div className="px-3 pb-3 space-y-3">
+  1075→                            <div>
+  1076→                              <label className="text-xs text-slate-500 mb-1 block">Marka</label>
+  1077→                              <select value={filters.brand} onChange={e => { updateFilter('brand', e.target.value); updateFilter('model', '') }}
+  1078→                                className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-[#e37224] appearance-none">
+  1079→                                <option value="">Tüm Markalar</option>
+  1080→                                {Object.keys(BRANDS).sort().map(b => <option key={b} value={b}>{b}</option>)}
+  1081→                              </select>
+  1082→                            </div>
+  1083→                            <div>
+  1084→                              <label className="text-xs text-slate-500 mb-1 block">Model</label>
+  1085→                              <select value={filters.model} onChange={e => updateFilter('model', e.target.value)} disabled={!filters.brand}
+  1086→                                className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-[#e37224] appearance-none disabled:opacity-50">
+  1087→                                <option value="">Tüm Modeller</option>
+  1088→                                {filters.brand && BRANDS[filters.brand]?.map(m => <option key={m} value={m}>{m}</option>)}
+  1089→                              </select>
+  1090→                            </div>
+  1091→                            <RangeRow label="Yıl Aralığı" icon={CalendarDays} min={2000} max={2026} minVal={filters.yearMin} maxVal={filters.yearMax} step={1} onChangeMin={v => updateFilter('yearMin', v)} onChangeMax={v => updateFilter('yearMax', v)} />
+  1092→                            <RangeRow label="Fiyat Aralığı (TL)" icon={Tag} min={0} max={5000000} minVal={filters.priceMin} maxVal={filters.priceMax} step={50000} onChangeMin={v => updateFilter('priceMin', v)} onChangeMax={v => updateFilter('priceMax', v)} />
+  1093→                            <RangeRow label="Kilometre" icon={Gauge} min={0} max={500000} minVal={filters.kmMin} maxVal={filters.kmMax} step={5000} onChangeMin={v => updateFilter('kmMin', v)} onChangeMax={v => updateFilter('kmMax', v)} suffix=" km" />
+  1094→                            <div><label className="text-xs text-slate-500 mb-1.5 flex items-center gap-1"><Fuel size={10} className="text-slate-400" /> Yakıt Tipi</label><ChipSelect options={FUEL_TYPES} selected={filters.fuelTypes} onToggle={v => toggleArrayFilter('fuelTypes', v)} maxShow={4} /></div>
+  1095→                            <div><label className="text-xs text-slate-500 mb-1.5 flex items-center gap-1"><Settings2 size={10} className="text-slate-400" /> Vites Tipi</label><ChipSelect options={TRANS_TYPES} selected={filters.transTypes} onToggle={v => toggleArrayFilter('transTypes', v)} maxShow={4} /></div>
+  1096→                          </div>
+  1097→                        </motion.div>
+  1098→                      )}
+  1099→                    </AnimatePresence>
+  1100→                  </div>
+  1101→
+  1102→                  {/* DETAYLI KRİTERLER */}
+  1103→                  <div className="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden">
+  1104→                    <button onClick={() => toggleSection('detay')} className="w-full flex items-center justify-between p-3 text-xs font-semibold text-slate-700 hover:text-[#c85e1a] transition-colors">
+  1105→                      <span className="flex items-center gap-1.5"><FileCheck size={12} className="text-[#e37224]" /> Detaylı Kriterler</span>{expandedSections.detay ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+  1106→                    </button>
+  1107→                    <AnimatePresence>
+  1108→                      {expandedSections.detay && (
+  1109→                        <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden">
+  1110→                          <div className="px-3 pb-3 space-y-3">
+  1111→                            <div><label className="text-xs text-slate-500 mb-1.5 flex items-center gap-1"><CarFront size={10} className="text-slate-400" /> Kasa Tipi</label><ChipSelect options={BODY_TYPES} selected={filters.bodyTypes} onToggle={v => toggleArrayFilter('bodyTypes', v)} maxShow={5} /></div>
+  1112→                            <div><label className="text-xs text-slate-500 mb-1.5 flex items-center gap-1"><Palette size={10} className="text-slate-400" /> Renk</label><ChipSelect options={COLORS} selected={filters.colors} onToggle={v => toggleArrayFilter('colors', v)} maxShow={6} /></div>
+  1113→                            <RangeRow label="Maks. Hasar Tutarı (TL)" icon={AlertTriangle} min={0} max={200000} minVal={0} maxVal={filters.damageLimit} step={5000} onChangeMin={() => {}} onChangeMax={v => updateFilter('damageLimit', v)} />
+  1114→                            <div><label className="text-xs text-slate-500 mb-1.5 flex items-center gap-1"><ShieldCheck size={10} className="text-slate-400" /> Hasar / Kaza Durumu</label>
+  1115→                              <TriToggle value={filters.accident} onChange={v => updateFilter('accident', v)} labels={['Kazasız', 'Kazalı Olabilir', 'Farketmez']} />
+  1116→                            </div>
+  1117→                            <div><label className="text-xs text-slate-500 mb-1.5 block">Takas Durumu</label>
+  1118→                              <TriToggle value={filters.tradeOk} onChange={v => updateFilter('tradeOk', v)} labels={['Kabul Eden', 'Kabul Etmeyen', 'Farketmez']} />
+  1119→                            </div>
+  1120→                            <div><label className="text-xs text-slate-500 mb-1.5 flex items-center gap-1"><WrenchIcon size={10} className="text-slate-400" /> Yetkili Servis Bakımlı</label>
+  1121→                              <TriToggle value={filters.authorizedService} onChange={v => updateFilter('authorizedService', v)} labels={['Evet', 'Hayır', 'Farketmez']} />
+  1122→                            </div>
+  1123→                            <div><label className="text-xs text-slate-500 mb-1.5 flex items-center gap-1"><BadgeCheck size={10} className="text-slate-400" /> Ekspertiz Raporu</label>
+  1124→                              <TriToggle value={filters.hasEkspertiz} onChange={v => updateFilter('hasEkspertiz', v)} labels={['Var', 'Yok', 'Farketmez']} />
+  1125→                            </div>
+  1126→                            <div><label className="text-xs text-slate-500 mb-1.5 flex items-center gap-1"><Shield size={10} className="text-slate-400" /> Garanti Durumu</label>
+  1127→                              <TriToggle value={filters.guarantee} onChange={v => updateFilter('guarantee', v)} labels={['Garantili', 'Garantisiz', 'Farketmez']} />
+  1128→                            </div>
+  1129→                            <div>
+  1130→                              <label className="text-xs text-slate-500 mb-1 flex items-center gap-1"><ImagePlus size={10} className="text-slate-400" /> Min. Fotoğraf Sayısı</label>
+  1131→                              <input type="number" value={filters.minPhotoCount} onChange={e => updateFilter('minPhotoCount', Number(e.target.value))} min={0} max={50}
+  1132→                                className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-[#e37224]" />
+  1133→                            </div>
+  1134→                            <div><label className="text-xs text-slate-500 mb-1.5 block">Araç Yaşı</label>
+  1135→                              <TriToggle value={filters.ageLimit} onChange={v => updateFilter('ageLimit', v)} labels={['0-3 Yıl', '3-7 Yıl', 'Farketmez']} />
+  1136→                            </div>
+  1137→                            <div><label className="text-xs text-slate-500 mb-1.5 block">Max Sahip Sayısı</label>
+  1138→                              <TriToggle value={filters.ownershipMax} onChange={v => updateFilter('ownershipMax', v)} labels={['1-2 Sahip', '3+ Sahip', 'Farketmez']} />
+  1139→                            </div>
+  1140→                          </div>
+  1141→                        </motion.div>
+  1142→                      )}
+  1143→                    </AnimatePresence>
+  1144→                  </div>
+  1145→
+  1146→                  {/* TEKNİK BİLGİLER */}
+  1147→                  <div className="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden">
+  1148→                    <button onClick={() => toggleSection('teknik')} className="w-full flex items-center justify-between p-3 text-xs font-semibold text-slate-700 hover:text-[#c85e1a] transition-colors">
+  1149→                      <span className="flex items-center gap-1.5"><Settings2 size={12} className="text-[#e37224]" /> Teknik Bilgiler</span>{expandedSections.teknik ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+  1150→                    </button>
+  1151→                    <AnimatePresence>
+  1152→                      {expandedSections.teknik && (
+  1153→                        <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden">
+  1154→                          <div className="px-3 pb-3 space-y-3">
+  1155→                            <RangeRow label="Motor Gücü (HP)" icon={Gauge} min={0} max={500} minVal={filters.hpMin} maxVal={filters.hpMax} step={10} onChangeMin={v => updateFilter('hpMin', v)} onChangeMax={v => updateFilter('hpMax', v)} suffix=" HP" />
+  1156→                            <RangeRow label="Motor Hacmi (cc)" min={0} max={5000} minVal={filters.engineMin} maxVal={filters.engineMax} step={100} onChangeMin={v => updateFilter('engineMin', v)} onChangeMax={v => updateFilter('engineMax', v)} suffix=" cc" />
+  1157→                            <div><label className="text-xs text-slate-500 mb-1.5 block">Çekiş Sistemi</label><ChipSelect options={DRIVE_TYPES} selected={filters.driveTypes} onToggle={v => toggleArrayFilter('driveTypes', v)} maxShow={4} /></div>
+  1158→                            <div><label className="text-xs text-slate-500 mb-1.5 block">Donatım Paketi</label><ChipSelect options={TRIMMING} selected={filters.trimming} onToggle={v => toggleArrayFilter('trimming', v)} maxShow={4} /></div>
+  1159→                          </div>
+  1160→                        </motion.div>
+  1161→                      )}
+  1162→                    </AnimatePresence>
+  1163→                  </div>
+  1164→
+  1165→                  {/* KONUM & SATICI */}
+  1166→                  <div className="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden">
+  1167→                    <button onClick={() => toggleSection('konum')} className="w-full flex items-center justify-between p-3 text-xs font-semibold text-slate-700 hover:text-[#c85e1a] transition-colors">
+  1168→                      <span className="flex items-center gap-1.5"><MapPinned size={12} className="text-[#e37224]" /> Konum & Satıcı</span>{expandedSections.konum ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+  1169→                    </button>
+  1170→                    <AnimatePresence>
+  1171→                      {expandedSections.konum && (
+  1172→                        <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden">
+  1173→                          <div className="px-3 pb-3 space-y-3">
+  1174→                            <div><label className="text-xs text-slate-500 mb-1.5 block">İl</label><ChipSelect options={CITIES} selected={filters.cities} onToggle={v => toggleArrayFilter('cities', v)} maxShow={8} /></div>
+  1175→                            <div>
+  1176→                              <label className="text-xs text-slate-500 mb-1 flex items-center gap-1"><CircleDot size={10} className="text-slate-400" /> Plaka İli</label>
+  1177→                              <select value={filters.plateCity} onChange={e => updateFilter('plateCity', e.target.value)}
+  1178→                                className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-[#e37224] appearance-none">
+  1179→                                <option value="">Farketmez</option>
+  1180→                                {PLATE_CITIES.map(c => <option key={c} value={c}>{c}</option>)}
+  1181→                              </select>
+  1182→                            </div>
+  1183→                            <div><label className="text-xs text-slate-500 mb-1.5 flex items-center gap-1"><UserCircle size={10} className="text-slate-400" /> Satıcı Tipi</label>
+  1184→                              <TriToggle value={filters.sellerType} onChange={v => updateFilter('sellerType', v)} labels={['Galeri', 'Bireysel', 'Farketmez']} />
+  1185→                            </div>
+  1186→                            <div>
+  1187→                              <label className="text-xs text-slate-500 mb-1 block">Şehir Ara (Serbest Metin)</label>
+  1188→                              <input type="text" value={filters.citySearch} onChange={e => updateFilter('citySearch', e.target.value)} placeholder="ör: Kadıköy, Beşiktaş..."
+  1189→                                className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#e37224]" />
+  1190→                            </div>
+  1191→                          </div>
+  1192→                        </motion.div>
+  1193→                      )}
+  1194→                    </AnimatePresence>
+  1195→                  </div>
+  1196→
+  1197→                  {/* GÜVENLİK & DONANIM */}
+  1198→                  <div className="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden">
+  1199→                    <button onClick={() => toggleSection('guvenlik')} className="w-full flex items-center justify-between p-3 text-xs font-semibold text-slate-700 hover:text-[#c85e1a] transition-colors">
+  1200→                      <span className="flex items-center gap-1.5"><ShieldCheck size={12} className="text-[#e37224]" /> Güvenlik & Donanım</span>{expandedSections.guvenlik ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+  1201→                    </button>
+  1202→                    <AnimatePresence>
+  1203→                      {expandedSections.guvenlik && (
+  1204→                        <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden">
+  1205→                          <div className="px-3 pb-3 space-y-3">
+  1206→                            <div><label className="text-xs text-slate-500 mb-1.5 block">Güvenlik Özellikleri</label><ChipSelect options={SAFETY} selected={filters.safetyFeatures} onToggle={v => toggleArrayFilter('safetyFeatures', v)} maxShow={5} /></div>
+  1207→                          </div>
+  1208→                        </motion.div>
+  1209→                      )}
+  1210→                    </AnimatePresence>
+  1211→                  </div>
+  1212→                </div>
+  1213→
+  1214→                {/* ─── BİLDİRİM AYARLA (Alert Setup) ─── */}
+  1215→                <div className="p-3 border-t border-slate-100">
+  1216→                  <div className="bg-slate-50 rounded-xl border-2 border-[#f09040]/40 overflow-hidden">
+  1217→                    {/* Header */}
+  1218→                    <button onClick={() => setShowAlertModal(!showAlertModal)}
+  1219→                      className="w-full flex items-center justify-between p-3 hover:bg-[#fff8f0] transition-colors">
+  1220→                      <span className="flex items-center gap-2">
+  1221→                        <div className="w-7 h-7 bg-[#fff8f0] rounded-lg flex items-center justify-center">
+  1222→                          <BellRing size={14} className="text-[#e37224]" />
+  1223→                        </div>
+  1224→                        <div className="text-left">
+  1225→                          <span className="text-xs font-bold text-[#c85e1a] block leading-tight">BİLDİRİM AYARLA</span>
+  1226→                          <span className="text-[9px] text-slate-500">Filtrelerinizi arka planda takip edin</span>
+  1227→                        </div>
+  1228→                      </span>
+  1229→                      <div className="flex items-center gap-2">
+  1230→                        {savedAlerts.filter(a => a.isActive).length > 0 && (
+  1231→                          <span className="flex items-center gap-1 text-[9px] bg-green-50 text-green-600 px-2 py-0.5 rounded-full">
+  1232→                            <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+  1233→                            {savedAlerts.filter(a => a.isActive).length} aktif
+  1234→                          </span>
+  1235→                        )}
+  1236→                        {showAlertModal ? <ChevronUp size={14} className="text-slate-400" /> : <ChevronDown size={14} className="text-slate-400" />}
+  1237→                      </div>
+  1238→                    </button>
+  1239→
+  1240→                    {/* Expanded content */}
+  1241→                    <AnimatePresence>
+  1242→                      {showAlertModal && (
+  1243→                        <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden">
+  1244→                          <div className="px-3 pb-3 space-y-3">
+  1245→                            {/* Alert name input */}
+  1246→                            <div>
+  1247→                              <label className="text-[10px] text-slate-500 mb-1 block flex items-center gap-1">
+  1248→                                <AlarmClock size={9} className="text-[#e37224]" /> Bildirim Adı
+  1249→                              </label>
+  1250→                              <input type="text" value={alertName} onChange={e => setAlertName(e.target.value)}
+  1251→                                placeholder={suggestedAlertName || 'ör: BMW 3 Serisi Takibi'}
+  1252→                                className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#e37224]" />
+  1253→                            </div>
+  1254→
+  1255→                            {/* Scan interval info */}
+  1256→                            <div className="flex items-center justify-between bg-white rounded-lg px-2.5 py-2 border border-slate-100">
+  1257→                              <div className="flex items-center gap-1.5">
+  1258→                                <Clock size={11} className="text-slate-400" />
+  1259→                                <span className="text-[10px] text-slate-500">Tarama aralığı</span>
+  1260→                              </div>
+  1261→                              <span className="text-[10px] font-semibold text-[#c85e1a]">10 dk</span>
+  1262→                            </div>
+  1263→
+  1264→                            {/* Scanner status */}
+  1265→                            {scannerStatus && (
+  1266→                              <div className="flex items-center justify-between bg-white rounded-lg px-2.5 py-2 border border-slate-100">
+  1267→                                <div className="flex items-center gap-1.5">
+  1268→                                  <Activity size={11} className={scannerStatus.isScanning ? 'text-green-600 animate-pulse' : 'text-slate-400'} />
+  1269→                                  <span className="text-[10px] text-slate-500">Tarayıcı durumu</span>
+  1270→                                </div>
+  1271→                                <span className={`text-[10px] font-semibold ${scannerStatus.isScanning ? 'text-green-600' : 'text-slate-400'}`}>
+  1272→                                  {scannerStatus.isScanning ? 'Taranıyor...' : scannerStatus.lastScanTime ? 'Beklemede' : 'Hazır'}
+  1273→                                </span>
+  1274→                              </div>
+  1275→                            )}
+  1276→
+  1277→                            {/* Create alert button */}
+  1278→                            <button onClick={saveAlert} disabled={!alertName.trim()}
+  1279→                              className="w-full bg-gradient-to-r from-[#e37224] to-[#c85e1a] hover:from-[#c85e1a] hover:to-[#a84f14] text-white font-bold py-2 rounded-lg transition-all text-xs flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed shadow-md shadow-[#e37224]/15">
+  1280→                              <Bell size={13} /> Bildirim Oluştur
+  1281→                            </button>
+  1282→
+  1283→                            {/* Manual scan trigger */}
+  1284→                            <button onClick={triggerScan}
+  1285→                              className="w-full bg-slate-100 hover:bg-slate-100 border border-slate-200 text-slate-600 font-semibold py-2 rounded-lg transition-all text-xs flex items-center justify-center gap-1.5">
+  1286→                              <Radar size={13} className="text-[#e37224]" /> Şimdi Tara
+  1287→                            </button>
+  1288→
+  1289→                            {/* Saved alerts list */}
+  1290→                            {savedAlerts.length > 0 && (
+  1291→                              <div className="space-y-2 mt-1">
+  1292→                                <div className="flex items-center justify-between">
+  1293→                                  <span className="text-[10px] text-slate-400 font-semibold">Kayıtlı Bildirimler</span>
+  1294→                                  <span className="text-[9px] text-slate-400">{savedAlerts.length} filtre</span>
+  1295→                                </div>
+  1296→                                <div className="space-y-1.5 max-h-48 overflow-y-auto">
+  1297→                                  {savedAlerts.map(alert => {
+  1298→                                    const unreadCount = alert.notifications?.length || 0
+  1299→                                    return (
+  1300→                                      <div key={alert.id} className="bg-slate-50 rounded-lg border border-slate-200 p-2.5">
+  1301→                                        <div className="flex items-center justify-between">
+  1302→                                          <div className="flex items-center gap-2 min-w-0 flex-1">
+  1303→                                            <span className={`w-2 h-2 rounded-full shrink-0 ${alert.isActive ? 'bg-green-400 animate-pulse' : 'bg-slate-600'}`} />
+  1304→                                            <span className="text-[11px] font-semibold text-slate-800 truncate">{alert.name}</span>
+  1305→                                            {unreadCount > 0 && (
+  1306→                                              <span className="bg-[#e37224] text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full shrink-0">{unreadCount}</span>
+  1307→                                            )}
+  1308→                                          </div>
+  1309→                                          <div className="flex items-center gap-1 shrink-0 ml-1">
+  1310→                                            <button onClick={() => toggleAlert(alert.id)} className="p-1 text-slate-400 hover:text-[#c85e1a] transition-colors" title={alert.isActive ? 'Durdur' : 'Başlat'}>
+  1311→                                              {alert.isActive ? <ToggleRight size={14} className="text-green-600" /> : <ToggleLeft size={14} />}
+  1312→                                            </button>
+  1313→                                            <button onClick={() => deleteAlert(alert.id)} className="p-1 text-slate-400 hover:text-red-600 transition-colors" title="Sil">
+  1314→                                              <Trash2 size={12} />
+  1315→                                            </button>
+  1316→                                          </div>
+  1317→                                        </div>
+  1318→                                        <div className="flex items-center gap-3 mt-1.5 text-[9px] text-slate-400">
+  1319→                                          {alert.lastScannedAt && (
+  1320→                                            <span className="flex items-center gap-0.5">
+  1321→                                              <Clock size={8} /> {new Date(alert.lastScannedAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+  1322→                                            </span>
+  1323→                                          )}
+  1324→                                          <span className="flex items-center gap-0.5">
+  1325→                                            <Radar size={8} /> {alert.lastResultCount || 0} sonuç
+  1326→                                          </span>
+  1327→                                          <span className="flex items-center gap-0.5">
+  1328→                                            <Activity size={8} /> {alert.totalScans || 0} tarama
+  1329→                                          </span>
+  1330→                                        </div>
+  1331→                                      </div>
+  1332→                                    )
+  1333→                                  })}
+  1334→                                </div>
+  1335→                              </div>
+  1336→                            )}
+  1337→                          </div>
+  1338→                        </motion.div>
+  1339→                      )}
+  1340→                    </AnimatePresence>
+  1341→                  </div>
+  1342→                </div>
+  1343→
+  1344→                {/* SEARCH BUTTON */}
+  1345→                <div className="p-3 border-t border-slate-100">
+  1346→                  <button onClick={doSearch} disabled={isScanning}
+  1347→                    className="w-full bg-gradient-to-r from-[#e37224] to-[#c85e1a] hover:from-[#c85e1a] hover:to-[#a84f14] text-white font-bold py-3 rounded-xl transition-all shadow-md shadow-[#e37224]/15 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
+  1348→                    {isScanning ? <><Loader2 size={16} className="animate-spin" /> İnternet Taranıyor... %{Math.round(scanProgress)}</>
+  1349→                      : <><Globe size={16} /> Tüm Siteleri Tara & Listele</>}
+  1350→                  </button>
+  1351→                  <p className="text-[9px] text-slate-400 text-center mt-2">sahibinden.com, arabam.com, letgo.com ve daha fazlası taranır</p>
+  1352→                </div>
+  1353→              </div>
+  1354→            </div>
+  1355→
+  1356→            {/* ─── RESULTS ─── */}
+  1357→            <div className="lg:col-span-7 xl:col-span-8">
+  1358→              {/* Scanning animation */}
+  1359→              {isScanning && (
+  1360→                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white border border-slate-200 rounded-2xl p-6 mb-4">
+  1361→                  <div className="flex items-center gap-3 mb-4">
+  1362→                    <div className="w-10 h-10 bg-[#fff8f0] rounded-xl flex items-center justify-center"><Radar size={20} className="text-[#e37224] animate-pulse" /></div>
+  1363→                    <div>
+  1364→                      <p className="text-sm font-semibold">Türkiye taranıyor...</p>
+  1365→                      <p className="text-xs text-slate-500">sahibinden.com, arabam.com, letgo.com taranıyor</p>
+  1366→                    </div>
+  1367→                  </div>
+  1368→                  <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
+  1369→                    <motion.div className="h-full bg-gradient-to-r from-[#e37224] to-[#f09040] rounded-full" style={{ width: `${scanProgress}%` }} transition={{ duration: 0.3 }} />
+  1370→                  </div>
+  1371→                  <div className="flex items-center justify-between mt-2">
+  1372→                    <p className="text-xs text-slate-400">İlanlar filtreleniyor ve güven skorlanıyor...</p>
+  1373→                    <span className="text-xs font-bold text-[#c85e1a]">%{Math.round(scanProgress)}</span>
+  1374→                  </div>
+  1375→                  {/* Source scanning status */}
+  1376→                  <div className="mt-3 flex flex-wrap gap-2">
+  1377→                    {['sahibinden.com', 'arabam.com', 'letgo.com', 'oto.sahibinden.com'].map((s, i) => (
+  1378→                      <div key={s} className={`flex items-center gap-1.5 text-[10px] px-2.5 py-1 rounded-full border ${scanProgress > (i + 1) * 20 ? 'bg-green-50 border-green-200 text-green-600' : 'bg-slate-100 border-slate-100 text-slate-400'}`}>
+  1379→                        {scanProgress > (i + 1) * 20 ? <CheckCircle2 size={10} /> : <Loader2 size={10} className={scanProgress > i * 20 ? 'animate-spin' : ''} />}
+  1380→                        {s}
+  1381→                      </div>
+  1382→                    ))}
+  1383→                  </div>
+  1384→                </motion.div>
+  1385→              )}
+  1386→
+  1387→              {/* Empty state */}
+  1388→              {!isScanning && !hasSearched && (
+  1389→                <div className="bg-white border border-slate-200 rounded-2xl p-10 text-center">
+  1390→                  <Globe size={48} className="text-slate-700 mx-auto mb-4" />
+  1391→                  <p className="text-slate-600 text-sm font-semibold mb-2">Filtrelerinizi belirleyin ve tüm Türkiye&apos;yi tarayın</p>
+  1392→                  <p className="text-slate-400 text-xs mb-4">Marka, model, yıl, fiyat, kilometre, kaza durumu, garanti ve daha fazlası...</p>
+  1393→                  <div className="flex flex-wrap justify-center gap-1.5">
+  1394→                    {['sahibinden.com', 'arabam.com', 'letgo.com', 'oto.sahibinden.com'].map(s => (
+  1395→                      <span key={s} className="text-[9px] bg-slate-100 text-slate-400 px-2 py-0.5 rounded-full">{s}</span>
+  1396→                    ))}
+  1397→                  </div>
+  1398→                </div>
+  1399→              )}
+  1400→
+  1401→              {/* No results */}
+  1402→              {!isScanning && hasSearched && totalResults === 0 && (
+  1403→                <div className="bg-white border border-slate-200 rounded-2xl p-10 text-center">
+  1404→                  <AlertTriangle size={48} className="text-slate-300 mx-auto mb-4" />
+  1405→                  <p className="text-slate-600 text-sm font-semibold mb-2">Kriterlerinize uygun araç bulunamadı</p>
+  1406→                  <p className="text-slate-400 text-xs">Filtreleri genişletmeyi veya kriterleri değiştirmeyi deneyin</p>
+  1407→                </div>
+  1408→              )}
+  1409→
+  1410→              {/* Results */}
+  1411→              {!isScanning && hasSearched && totalResults > 0 && (
+  1412→                <div>
+  1413→                  {/* Result tabs */}
+  1414→                  <div className="flex items-center gap-3 mb-3">
+  1415→                    <div className="flex bg-slate-100 rounded-xl border border-slate-200 p-0.5">
+  1416→                      <button onClick={() => setActiveTab('web')} className={`text-xs px-3 py-1.5 rounded-lg font-semibold transition-all flex items-center gap-1.5 ${activeTab === 'web' ? 'bg-[#e37224] text-white' : 'text-slate-500 hover:text-slate-900'}`}>
+  1417→                        <Globe size={12} /> İnternet Sonuçları {webResults.length > 0 && <span className="text-[9px] bg-white/20 px-1.5 rounded-full">{webResults.length}</span>}
+  1418→                      </button>
+  1419→                      <button onClick={() => setActiveTab('mock')} className={`text-xs px-3 py-1.5 rounded-lg font-semibold transition-all flex items-center gap-1.5 ${activeTab === 'mock' ? 'bg-[#e37224] text-white' : 'text-slate-500 hover:text-slate-900'}`}>
+  1420→                        <Car size={12} /> Veritabanı {results.length > 0 && <span className="text-[9px] bg-white/20 px-1.5 rounded-full">{results.length}</span>}
+  1421→                      </button>
+  1422→                    </div>
+  1423→                    <div className="flex items-center gap-2 text-[10px] text-slate-400 ml-auto">
+  1424→                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500" /> Güvenli</span>
+  1425→                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-yellow-500" /> Orta</span>
+  1426→                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500" /> Riskli</span>
+  1427→                    </div>
+  1428→                  </div>
+  1429→
+  1430→                  {/* Scanned sources info */}
+  1431→                  {scannedSources.length > 0 && activeTab === 'web' && (
+  1432→                    <div className="mb-3 flex items-center gap-2 text-[10px] text-slate-400">
+  1433→                      <Radar size={10} className="text-[#e37224]" />
+  1434→                      <span>Taranan siteler:</span>
+  1435→                      {scannedSources.map(s => (
+  1436→                        <span key={s} className="bg-slate-100 px-2 py-0.5 rounded-full text-slate-500">{s}</span>
+  1437→                      ))}
+  1438→                    </div>
+  1439→                  )}
+  1440→
+  1441→                  {/* ─── SIRALANABİLİR BAŞLIK ─── */}
+  1442→                  <SortableHeader sortField={sortField} sortDir={sortDir} onSort={toggleSort} />
+  1443→
+  1444→                  {/* Web Results */}
+  1445→                  {activeTab === 'web' && (() => {
+  1446→                    // ─── SIRALAMA MANTIĞI ───
+  1447→                    const sorted = [...webResults].sort((a, b) => {
+  1448→                      if (!sortField || !sortDir) return 0
+  1449→                      const dir = sortDir === 'asc' ? 1 : -1
+  1450→                      const aText = `${a.title} ${a.snippet}`
+  1451→                      const bText = `${b.title} ${b.snippet}`
+  1452→                      switch (sortField) {
+  1453→                        case 'model': return dir * a.title.localeCompare(b.title, 'tr')
+  1454→                        case 'title': return dir * a.title.localeCompare(b.title, 'tr')
+  1455→                        case 'year': return dir * (extractYear(aText) - extractYear(bText))
+  1456→                        case 'km': return dir * (extractKm(aText) - extractKm(bText))
+  1457→                        case 'color': return dir * extractColor(aText).localeCompare(extractColor(bText), 'tr')
+  1458→                        case 'price': {
+  1459→                          const pa = parseInt((a.price || '0').replace(/[^0-9]/g, ''))
+  1460→                          const pb = parseInt((b.price || '0').replace(/[^0-9]/g, ''))
+  1461→                          return dir * (pa - pb)
+  1462→                        }
+  1463→                        case 'date': return dir * (a.date || '').localeCompare(b.date || '')
+  1464→                        case 'city': return dir * extractCity(aText).localeCompare(extractCity(bText), 'tr')
+  1465→                        default: return 0
+  1466→                      }
+  1467→                    })
+  1468→
+  1469→                    return (
+  1470→                      <div className="max-h-[65vh] overflow-y-auto pr-1 border border-t-0 border-slate-200 rounded-b-xl">
+  1471→                        {sorted.map((v, i) => {
+  1472→                          const cState = contactMap[v.id]
+  1473→                          const combined = `${v.title} ${v.snippet}`
+  1474→                          const vModel = v.title.split(' ').slice(0, 2).join(' ')
+  1475→                          const vYear = extractYear(combined)
+  1476→                          const vKm = extractKm(combined)
+  1477→                          const vColor = extractColor(combined)
+  1478→                          const vCity = extractCity(combined)
+  1479→                          return (
+  1480→                            <div key={v.id}>
+  1481→                              <motion.div
+  1482→                                initial={{ opacity: 0 }}
+  1483→                                animate={{ opacity: 1 }}
+  1484→                                transition={{ delay: i * 0.03 }}
+  1485→                                className="flex items-center hover:hover:bg-[#fff8f0] transition-colors group border-b border-slate-100 last:border-b-0"
+  1486→                              >
+  1487→                                {/* Model */}
+  1488→                                <div className="w-[110px] min-w-[90px] px-2.5 py-2.5">
+  1489→                                  <span className="text-[11px] font-semibold text-slate-900 truncate block">{vModel}</span>
+  1490→                                  <span className={`text-[8px] px-1.5 py-0.5 rounded-full border font-semibold inline-block mt-0.5 ${getSourceColor(v.source)}`}>{v.source}</span>
+  1491→                                </div>
+  1492→                                {/* İlan Başlığı */}
+  1493→                                <div className="flex-1 min-w-[160px] px-2.5 py-2.5">
+  1494→                                  <p className="text-[11px] text-slate-700 line-clamp-2 leading-snug group-hover:text-[#c85e1a] transition-colors">{v.title}</p>
+  1495→                                  <div className="flex items-center gap-1.5 mt-1">
+  1496→                                    <button onClick={() => fetchInsight(v)}
+  1497→                                      className={`p-1 rounded transition-all ${selectedInsightUrl === v.url ? 'bg-purple-50 text-purple-600' : 'text-slate-300 hover:text-purple-600'}`}
+  1498→                                      title="AI Analizi"><Sparkle size={11} /></button>
+  1499→                                    <button onClick={() => toggleCompare(v.id)}
+  1500→                                      className={`p-1 rounded transition-all ${compareIds.has(v.id) ? 'bg-blue-50 text-blue-600' : 'text-slate-300 hover:text-blue-600'}`}
+  1501→                                      title="Karşılaştır"><GitCompare size={11} /></button>
+  1502→                                    <button onClick={() => fetchContact(v.id, v.url)}
+  1503→                                      className={`p-1 rounded transition-all ${cState?.show ? 'bg-green-50 text-green-600' : 'text-slate-500 hover:text-[#c85e1a]'}`}
+  1504→                                      title="İletişim">{cState?.loading ? <Loader2 size={11} className="animate-spin" /> : <Phone size={11} />}</button>
+  1505→                                    <button onClick={() => { setFavUrls(prev => { const n = new Set(prev); n.has(v.url) ? n.delete(v.url) : n.add(v.url); return n }) }}
+  1506→                                      className="p-1"><Heart size={11} className={favUrls.has(v.url) ? 'text-red-500 fill-red-500' : 'text-slate-400 hover:text-red-500'} /></button>
+  1507→                                    <a href={v.url} target="_blank" rel="noopener noreferrer" className="p-1 text-slate-500 hover:text-[#c85e1a]"><ExternalLink size={11} /></a>
+  1508→                                  </div>
+  1509→                                </div>
+  1510→                                {/* Yıl */}
+  1511→                                <div className="w-[60px] min-w-[50px] px-2.5 py-2.5 text-center">
+  1512→                                  <span className="text-[11px] text-slate-600">{vYear || '-'}</span>
+  1513→                                </div>
+  1514→                                {/* KM */}
+  1515→                                <div className="w-[85px] min-w-[70px] px-2.5 py-2.5 text-right">
+  1516→                                  <span className="text-[11px] text-slate-600">{vKm ? formatKm(vKm) : '-'}</span>
+  1517→                                </div>
+  1518→                                {/* Renk */}
+  1519→                                <div className="w-[75px] min-w-[60px] px-2.5 py-2.5">
+  1520→                                  <span className="text-[11px] text-slate-600">{vColor}</span>
+  1521→                                </div>
+  1522→                                {/* Fiyat */}
+  1523→                                <div className="w-[130px] min-w-[100px] px-2.5 py-2.5 text-right">
+  1524→                                  <span className="text-[12px] font-bold text-[#c85e1a]">{v.price || '-'}</span>
+  1525→                                </div>
+  1526→                                {/* İlan Tarihi */}
+  1527→                                <div className="w-[100px] min-w-[85px] px-2.5 py-2.5">
+  1528→                                  <span className="text-[10px] text-slate-500 flex items-center gap-0.5"><Clock size={9} className="text-slate-400 shrink-0" />{v.date || '-'}</span>
+  1529→                                </div>
+  1530→                                {/* İl / İlçe */}
+  1531→                                <div className="w-[110px] min-w-[90px] px-2.5 py-2.5">
+  1532→                                  <span className="text-[11px] text-slate-600 flex items-center gap-1"><MapPin size={9} className="text-slate-400 shrink-0" />{vCity}</span>
+  1533→                                </div>
+  1534→                              </motion.div>
+  1535→
+  1536→                              {/* ─── GENİŞLETİLMİŞ PANEL: AI Analizi ─── */}
+  1537→                              <AnimatePresence>
+  1538→                                {selectedInsightUrl === v.url && insightData && (
+  1539→                                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+  1540→                                    <div className="bg-white border border-purple-200 rounded-lg mx-3 mb-2 p-3">
+  1541→                                      <div className="flex items-center gap-1.5 mb-2">
+  1542→                                        <Sparkle size={10} className="text-purple-600" />
+  1543→                                        <span className="text-[10px] font-semibold text-purple-600">AI Analizi</span>
+  1544→                                        <button onClick={() => setSelectedInsightUrl(null)} className="ml-auto text-slate-400 hover:text-slate-700"><X size={10} /></button>
+  1545→                                      </div>
+  1546→                                      {isInsightLoading ? (
+  1547→                                        <div className="flex items-center gap-2 text-xs text-slate-500"><Loader2 size={12} className="animate-spin" /> Analiz ediliyor...</div>
+  1548→                                      ) : (
+  1549→                                        <div className="space-y-2">
+  1550→                                          {insightData.summary?.length > 0 && (
+  1551→                                            <div>
+  1552→                                              <span className="text-[9px] text-slate-400 block mb-1">Özet</span>
+  1553→                                              {insightData.summary.map((s: string, idx: number) => (
+  1554→                                                <p key={idx} className="text-[10px] text-slate-600 flex items-start gap-1"><span className="text-[#e37224] shrink-0">•</span>{s}</p>
+  1555→                                              ))}
+  1556→                                            </div>
+  1557→                                          )}
+  1558→                                          {insightData.questions?.length > 0 && (
+  1559→                                            <div>
+  1560→                                              <span className="text-[9px] text-slate-400 block mb-1">Satıcıya Sorulacaklar</span>
+  1561→                                              {insightData.questions.slice(0, 3).map((q: string, idx: number) => (
+  1562→                                                <p key={idx} className="text-[10px] text-slate-600 flex items-start gap-1"><MessageCircle size={8} className="text-blue-600 shrink-0 mt-0.5" />{q}</p>
+  1563→                                              ))}
+  1564→                                            </div>
+  1565→                                          )}
+  1566→                                          {insightData.negotiation?.suggestion && (
+  1567→                                            <div className="bg-green-50 border border-green-200 rounded-lg p-2">
+  1568→                                              <span className="text-[9px] text-green-600 font-semibold block mb-0.5">Pazarlık Önerisi</span>
+  1569→                                              <p className="text-[10px] text-slate-600">{insightData.negotiation.suggestion}</p>
+  1570→                                              {insightData.negotiation.maxPrice > 0 && (
+  1571→                                                <p className="text-[10px] text-green-600 font-bold mt-1">Önerilen max: {insightData.negotiation.maxPrice.toLocaleString('tr-TR')} TL</p>
+  1572→                                              )}
+  1573→                                            </div>
+  1574→                                          )}
+  1575→                                        </div>
+  1576→                                      )}
+  1577→                                    </div>
+  1578→                                  </motion.div>
+  1579→                                )}
+  1580→                              </AnimatePresence>
+  1581→
+  1582→                              {/* ─── GENİŞLETİLMİŞ PANEL: İletişim ─── */}
+  1583→                              <AnimatePresence>
+  1584→                                {cState?.show && !cState.loading && (
+  1585→                                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+  1586→                                    <div className="bg-white border border-slate-100 rounded-lg mx-3 mb-2 p-2.5">
+  1587→                                      <div className="flex items-center gap-1.5 mb-2">
+  1588→                                        <Phone size={10} className="text-[#e37224]" />
+  1589→                                        <span className="text-[10px] font-semibold text-[#e37224]">İletişim Bilgileri</span>
+  1590→                                      </div>
+  1591→                                      {cState.hasContact && cState.data ? (
+  1592→                                        <div className="space-y-2">
+  1593→                                          {cState.data.phone.length > 0 && (
+  1594→                                            <div className="flex items-start gap-2">
+  1595→                                              <Phone size={11} className="text-green-600 shrink-0 mt-0.5" />
+  1596→                                              <div className="flex-1">
+  1597→                                                <span className="text-[9px] text-slate-400 block">Telefon</span>
+  1598→                                                <div className="space-y-0.5">
+  1599→                                                  {cState.data.phone.map((ph: string, pi: number) => (
+  1600→                                                    <div key={pi} className="flex items-center gap-1.5">
+  1601→                                                      <a href={`tel:${ph.replace(/\s/g, '')}`} className="text-xs font-bold text-slate-800 hover:text-[#c85e1a]">{ph}</a>
+  1602→                                                      <button onClick={() => copyToClipboard(ph)} className="p-0.5 text-slate-400 hover:text-[#c85e1a]">
+  1603→                                                        {copiedPhone === ph ? <Check size={9} className="text-green-600" /> : <Copy size={9} />}
+  1604→                                                      </button>
+  1605→                                                    </div>
+  1606→                                                  ))}
+  1607→                                                </div>
+  1608→                                              </div>
+  1609→                                            </div>
+  1610→                                          )}
+  1611→                                          {cState.data.sellerName && (
+  1612→                                            <div className="flex items-start gap-2">
+  1613→                                              <Building2 size={11} className="text-blue-600 shrink-0 mt-0.5" />
+  1614→                                              <div>
+  1615→                                                <span className="text-[9px] text-slate-400 block">Satıcı</span>
+  1616→                                                <span className="text-xs text-slate-900">{cState.data.sellerName}</span>
+  1617→                                                <span className="text-[9px] text-slate-400 ml-1.5">({cState.data.sellerType})</span>
+  1618→                                              </div>
+  1619→                                            </div>
+  1620→                                          )}
+  1621→                                          {cState.data.address && (
+  1622→                                            <div className="flex items-start gap-2">
+  1623→                                              <MapPin size={11} className="text-yellow-600 shrink-0 mt-0.5" />
+  1624→                                              <div>
+  1625→                                                <span className="text-[9px] text-slate-400 block">Adres</span>
+  1626→                                                <span className="text-xs text-slate-900">{cState.data.address}</span>
+  1627→                                              </div>
+  1628→                                            </div>
+  1629→                                          )}
+  1630→                                          <div className="flex items-start gap-2">
+  1631→                                            <Globe size={11} className="text-slate-500 shrink-0 mt-0.5" />
+  1632→                                            <div>
+  1633→                                              <span className="text-[9px] text-slate-400 block">İlan Bağlantısı</span>
+  1634→                                              <a href={v.url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-600 hover:text-[#e37224] truncate block max-w-[250px]">{v.url}</a>
+  1635→                                            </div>
+  1636→                                          </div>
+  1637→                                        </div>
+  1638→                                      ) : (
+  1639→                                        <div className="flex items-center gap-2 py-1">
+  1640→                                          <AlertTriangle size={11} className="text-yellow-500" />
+  1641→                                          <span className="text-[10px] text-slate-500">İletişim bilgisi bulunamadı.</span>
+  1642→                                          <a href={v.url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-[#e37224] font-semibold hover:underline ml-auto shrink-0">Sayfaya Git →</a>
+  1643→                                        </div>
+  1644→                                      )}
+  1645→                                    </div>
+  1646→                                  </motion.div>
+  1647→                                )}
+  1648→                              </AnimatePresence>
+  1649→
+  1650→                              {cState?.loading && (
+  1651→                                <div className="mx-3 mb-2 bg-slate-50 rounded-lg border border-slate-200 p-2.5 flex items-center gap-2">
+  1652→                                  <Loader2 size={12} className="animate-spin text-[#e37224]" />
+  1653→                                  <span className="text-[10px] text-slate-500">İletişim bilgileri aranıyor...</span>
+  1654→                                </div>
+  1655→                              )}
+  1656→                            </div>
+  1657→                          )
+  1658→                        })}
+  1659→                      </div>
+  1660→                    )
+  1661→                  })()}
+  1662→
+  1663→                  {/* Mock/DB Results */}
+  1664→                  {activeTab === 'mock' && (() => {
+  1665→                    const sorted = [...results].sort((a, b) => {
+  1666→                      if (!sortField || !sortDir) return 0
+  1667→                      const dir = sortDir === 'asc' ? 1 : -1
+  1668→                      switch (sortField) {
+  1669→                        case 'model': return dir * `${a.brand} ${a.model}`.localeCompare(`${b.brand} ${b.model}`, 'tr')
+  1670→                        case 'title': return dir * `${a.year} ${a.brand} ${a.model} ${a.engine}`.localeCompare(`${b.year} ${b.brand} ${b.model} ${b.engine}`, 'tr')
+  1671→                        case 'year': return dir * (a.year - b.year)
+  1672→                        case 'km': return dir * (a.km - b.km)
+  1673→                        case 'color': return dir * a.color.localeCompare(b.color, 'tr')
+  1674→                        case 'price': return dir * (a.price - b.price)
+  1675→                        case 'date': return dir * (a.id - b.id)
+  1676→                        case 'city': return dir * a.city.localeCompare(b.city, 'tr')
+  1677→                        default: return 0
+  1678→                      }
+  1679→                    })
+  1680→
+  1681→                    return (
+  1682→                      <div className="max-h-[65vh] overflow-y-auto pr-1 border border-t-0 border-slate-200 rounded-b-xl">
+  1683→                        {sorted.map((v, i) => (
+  1684→                          <div key={v.id}>
+  1685→                            <motion.div
+  1686→                              initial={{ opacity: 0 }}
+  1687→                              animate={{ opacity: 1 }}
+  1688→                              transition={{ delay: i * 0.04 }}
+  1689→                              className="flex items-center hover:hover:bg-[#fff8f0] transition-colors group border-b border-slate-100 last:border-b-0"
+  1690→                            >
+  1691→                              {/* Model */}
+  1692→                              <div className="w-[110px] min-w-[90px] px-2.5 py-2.5">
+  1693→                                <span className="text-[11px] font-semibold text-slate-900 truncate block">{v.brand} {v.model}</span>
+  1694→                                <div className="flex gap-1 mt-0.5">
+  1695→                                  {v.accident && <span className="text-[7px] bg-red-50 text-red-600 px-1 py-0.5 rounded font-bold">KAZALI</span>}
+  1696→                                  {!v.accident && v.damage === 0 && <span className="text-[7px] bg-green-50 text-green-600 px-1 py-0.5 rounded font-bold">HASARSIZ</span>}
+  1697→                                  {v.score >= 85 && <span className="text-[7px] bg-[#fff8f0] text-[#c85e1a] px-1 py-0.5 rounded font-bold">FIRSAT</span>}
+  1698→                                </div>
+  1699→                              </div>
+  1700→                              {/* İlan Başlığı */}
+  1701→                              <div className="flex-1 min-w-[160px] px-2.5 py-2.5">
+  1702→                                <p className="text-[11px] text-slate-700 leading-snug group-hover:text-[#c85e1a] transition-colors">{v.engine} - {v.hp} HP - {v.drive}</p>
+  1703→                                <p className="text-[9px] text-slate-400 mt-0.5">{v.fuel} · {v.trans} · {v.body}{v.damage > 0 ? ` · Hasar: ${formatPrice(v.damage)}` : ''}</p>
+  1704→                                <p className="text-[8px] text-slate-300 mt-0.5">{v.damageDetail}</p>
+  1705→                                <div className="flex items-center gap-1.5 mt-1 flex-nowrap whitespace-nowrap">
+  1706→                                  <button onClick={() => { setFavIds(prev => { const n = new Set(prev); n.has(v.id) ? n.delete(v.id) : n.add(v.id); return n }) }}
+  1707→                                    className="p-0.5"><Heart size={11} className={favIds.has(v.id) ? 'text-red-500 fill-red-500' : 'text-slate-400 hover:text-red-500'} /></button>
+  1708→                                  <span className="flex items-center gap-0.5 text-[9px] text-slate-400 shrink-0"><Phone size={8} className="text-green-600" />0 532 {100 + (v.id * 37) % 900} {10 + (v.id * 13) % 90} {10 + (v.id * 7) % 90}</span>
+  1709→                                  <span className="flex items-center gap-0.5 text-[9px] text-slate-400 shrink-0"><Building2 size={8} className="text-blue-600" />{v.seller}</span>
+  1710→                                  <DedektifPuani score={v.score} size="default" />
+  1711→                                </div>
+  1712→                              </div>
+  1713→                              {/* Yıl */}
+  1714→                              <div className="w-[60px] min-w-[50px] px-2.5 py-2.5 text-center">
+  1715→                                <span className="text-[11px] text-slate-600 font-medium">{v.year}</span>
+  1716→                              </div>
+  1717→                              {/* KM */}
+  1718→                              <div className="w-[85px] min-w-[70px] px-2.5 py-2.5 text-right">
+  1719→                                <span className="text-[11px] text-slate-600">{formatKm(v.km)}</span>
+  1720→                              </div>
+  1721→                              {/* Renk */}
+  1722→                              <div className="w-[75px] min-w-[60px] px-2.5 py-2.5">
+  1723→                                <span className="text-[11px] text-slate-600">{v.color}</span>
+  1724→                              </div>
+  1725→                              {/* Fiyat */}
+  1726→                              <div className="w-[130px] min-w-[100px] px-2.5 py-2.5 text-right">
+  1727→                                <span className="text-[12px] font-bold text-[#c85e1a]">{formatPrice(v.price)}</span>
+  1728→                                {v.score >= 85 && <span className="block text-[8px] text-green-600">Piyasaya göre uygun</span>}
+  1729→                              </div>
+  1730→                              {/* İlan Tarihi */}
+  1731→                              <div className="w-[100px] min-w-[85px] px-2.5 py-2.5">
+  1732→                                <span className="text-[10px] text-slate-500 flex items-center gap-0.5"><CalendarDays size={9} className="text-slate-400 shrink-0" />{new Date(2025, 0, 20 - v.id).toLocaleDateString('tr-TR')}</span>
+  1733→                              </div>
+  1734→                              {/* İl / İlçe */}
+  1735→                              <div className="w-[110px] min-w-[90px] px-2.5 py-2.5">
+  1736→                                <span className="text-[11px] text-slate-600 flex items-center gap-1"><MapPin size={9} className="text-slate-400 shrink-0" />{v.city}</span>
+  1737→                              </div>
+  1738→                            </motion.div>
+  1739→                          </div>
+  1740→                        ))}
+  1741→                      </div>
+  1742→                    )
+  1743→                  })()}
+  1744→                </div>
+  1745→              )}
+  1746→            </div>
+  1747→          </div>
+  1748→        </div>
+  1749→      </Section>
+  1750→
+  1751→      {/* ═══ AI CHAT ═══ */}
+  1752→      <Section id="ai" className="py-12 px-4 bg-slate-50">
+  1753→        <div className="max-w-2xl mx-auto">
+  1754→          <div className="text-center mb-6">
+  1755→            <h2 className="text-xl sm:text-2xl font-extrabold mb-2 text-[#0f2a48]">AI <span className="text-[#e37224]">Araç Asistanınız</span></h2>
+  1756→            <p className="text-xs text-slate-500">Sadece yazın, yapay zeka analiz etsin</p>
+  1757→          </div>
+  1758→          <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+  1759→            <div className="bg-slate-50 px-4 py-2.5 border-b border-slate-200 flex items-center gap-2">
+  1760→              <div className="w-7 h-7 bg-[#0f2a48] rounded-lg flex items-center justify-center"><Bot size={14} className="text-[#e37224]" /></div>
+  1761→              <div><p className="text-xs font-semibold text-[#0f2a48]">OtoDedektif AI</p><p className="text-[9px] text-green-600 flex items-center gap-1"><span className="w-1 h-1 bg-green-500 rounded-full animate-pulse" />Çevrimiçi</p></div>
+  1762→            </div>
+  1763→            <div className="p-3 space-y-3 min-h-[200px] max-h-[300px] overflow-y-auto">
+  1764→              {chatMessages.length === 0 && (
+  1765→                <div className="text-center py-6">
+  1766→                  <p className="text-slate-400 text-xs mb-3">Bir soru sorun veya hazır sorulardan seçin</p>
+  1767→                  <div className="flex flex-wrap justify-center gap-1.5">
+  1768→                    {['1 milyon bütçem var, aile arabası istiyorum', 'En az yakan SUV öner', 'Dizel mi hibrit mi?'].map((q, i) => (
+  1769→                      <button key={i} onClick={() => setChatInput(q)} className="text-[10px] bg-[#fff8f0] border border-[#f09040]/30 text-[#c85e1a] px-2.5 py-1 rounded-full hover:bg-[#fff8f0] transition-colors">{q}</button>
+  1770→                    ))}
+  1771→                  </div>
+  1772→                </div>
+  1773→              )}
+  1774→              <AnimatePresence>{chatMessages.map((msg, i) => (
+  1775→                <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+  1776→                  <div className={`max-w-[85%] rounded-xl px-3 py-2 text-xs leading-relaxed ${msg.role === 'user' ? 'bg-[#e37224] text-white rounded-br-sm' : 'bg-slate-100 text-slate-700 border border-slate-200 rounded-bl-sm'}`}>{msg.text}</div>
+  1777→                </motion.div>
+  1778→              ))}</AnimatePresence>
+  1779→            </div>
+  1780→            <div className="p-2.5 border-t border-slate-200 flex gap-2">
+  1781→              <input type="text" value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && sendChat()} placeholder="Araç hakkında soru sorun..."
+  1782→                className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#e37224]" />
+  1783→              <button onClick={sendChat} className="bg-[#e37224] hover:bg-[#c85e1a] text-white px-3 py-2 rounded-lg transition-colors"><Send size={14} /></button>
+  1784→            </div>
+  1785→          </div>
+  1786→        </div>
+  1787→      </Section>
+  1788→
+  1789→      {/* ═══ PREMIUM ═══ */}
+  1790→      <Section id="uyelik" className="py-12 px-4 bg-white">
+  1791→        <div className="max-w-3xl mx-auto">
+  1792→          <div className="text-center mb-6"><h2 className="text-xl sm:text-2xl font-extrabold mb-2 text-[#0f2a48]">Planınızı <span className="text-[#e37224]">seçin</span></h2></div>
+  1793→          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+  1794→            <div className="bg-white border border-slate-200 rounded-2xl p-5">
+  1795→              <h3 className="text-base font-bold text-[#0f2a48] mb-1">Ücretsiz</h3>
+  1796→              <div className="text-2xl font-extrabold text-[#0f2a48] mb-4">0 TL<span className="text-xs font-normal text-slate-400">/ay</span></div>
+  1797→              <ul className="space-y-2 mb-5">{['3 araç takibi', 'Günlük bildirim', '3 AI soru/gün'].map((f, i) => (
+  1798→                <li key={i} className="flex items-center gap-1.5 text-xs text-slate-600"><CheckCircle2 size={12} className="text-slate-400 shrink-0" />{f}</li>
+  1799→              ))}</ul>
+  1800→              <button className="w-full border border-slate-300 hover:border-[#e37224] text-slate-700 text-sm font-semibold py-2.5 rounded-xl transition-all hover:bg-[#fff8f0]">Başla</button>
+  1801→            </div>
+  1802→            <div className="relative bg-gradient-to-b from-white to-slate-50 border-2 border-[#f09040]/40 rounded-2xl p-5 shadow-xl shadow-[#e37224]/10">
+  1803→              <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#e37224] to-[#c85e1a] text-white text-[9px] font-bold px-3 py-0.5 rounded-full">EN POPÜLER</div>
+  1804→              <h3 className="text-base font-bold text-[#0f2a48] mb-1">Premium</h3>
+  1805→              <div className="flex items-end gap-1 mb-1"><span className="text-2xl font-extrabold text-[#c85e1a]">149 TL</span><span className="text-xs text-slate-400 mb-0.5">/ay</span></div>
+  1806→              <p className="text-[9px] text-slate-500 mb-4">Yıllık: 99 TL/ay (%33 tasarruf)</p>
+  1807→              <ul className="space-y-2 mb-5">{['Sınırsız araç takibi', 'Anında bildirim', 'Fırsat analizi', 'Sınırsız AI', 'Pazarlık yardımcısı', 'Sahte ilan analizi'].map((f, i) => (
+  1808→                <li key={i} className="flex items-center gap-1.5 text-xs text-slate-600"><CheckCircle2 size={12} className="text-[#e37224] shrink-0" />{f}</li>
+  1809→              ))}</ul>
+  1810→              <button className="w-full bg-gradient-to-r from-[#e37224] to-[#c85e1a] hover:from-[#c85e1a] hover:to-[#a84f14] text-white text-sm font-bold py-2.5 rounded-xl transition-all shadow-md shadow-[#e37224]/15">7 Gün Ücretsiz Dene</button>
+  1811→            </div>
+  1812→          </div>
+  1813→        </div>
+  1814→      </Section>
+  1815→
+  1816→      {/* ═══ KARŞILAŞTIRMA HAVUZU ═══ */}
+  1817→      {compareIds.size >= 2 && (
+  1818→        <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-lg border-t border-blue-200 shadow-lg px-4 py-3">
+  1819→          <div className="max-w-7xl mx-auto flex items-center justify-between">
+  1820→            <div className="flex items-center gap-3">
+  1821→              <GitCompare size={18} className="text-blue-600" />
+  1822→              <span className="text-sm font-bold text-[#0f2a48]">{compareIds.size} araç seçili</span>
+  1823→              <span className="text-[10px] text-slate-500">Karşılaştırmak için en az 2 araç gerekli</span>
+  1824→            </div>
+  1825→            <div className="flex items-center gap-2">
+  1826→              <a href="/compare" className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold px-4 py-2 rounded-lg text-xs transition-all flex items-center gap-1.5">
+  1827→                <GitCompare size={14} /> Karşılaştır
+  1828→              </a>
+  1829→              <button onClick={() => setCompareIds(new Set())} className="text-xs text-slate-400 hover:text-red-600">Temizle</button>
+  1830→            </div>
+  1831→          </div>
+  1832→        </div>
+  1833→      )}
+  1834→
+  1835→      {/* ═══ SAHİPLİK MALİYETİ HESAPLAYICI ═══ */}
+  1836→      <Section id="maliyet" className="py-8 px-4 bg-slate-50">
+  1837→        <div className="max-w-4xl mx-auto">
+  1838→          <div className="flex items-center gap-3 mb-6">
+  1839→            <div className="w-10 h-10 bg-[#fff8f0] rounded-xl flex items-center justify-center"><Calculator size={22} className="text-[#e37224]" /></div>
+  1840→            <div>
+  1841→              <h2 className="text-xl font-extrabold text-[#0f2a48]">Sahiplik Maliyeti Hesaplayıcı</h2>
+  1842→              <p className="text-xs text-slate-500">Araç fiyatının ötesinde yıllık gerçek maliyetinizi hesaplayın</p>
+  1843→            </div>
+  1844→          </div>
+  1845→          <div className="bg-white border border-slate-200 rounded-2xl p-4">
+  1846→            <OwnershipCalc />
+  1847→          </div>
+  1848→        </div>
+  1849→      </Section>
+  1850→
+  1851→      {/* ═══ FOOTER ═══ */}
+  1852→      <footer className="bg-[#0f2a48] py-6 px-4">
+  1853→        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+  1854→          <div className="flex items-center gap-2">
+  1855→            <Image src="/logo-v2.png" alt="OtoDedektif" width={140} height={78} className="h-9 w-auto" />
+  1856→          </div>
+  1857→          <p className="text-[10px] text-white/50">&copy; 2026 OtoDedektif. Tüm hakları saklıdır.</p>
+  1858→          <div className="flex gap-3 text-[10px] text-white/50">
+  1859→            <a href="#" className="hover:text-[#e37224]">Gizlilik</a>
+  1860→            <a href="#" className="hover:text-[#e37224]">KVKK</a>
+  1861→            <a href="#" className="hover:text-[#e37224]">İletişim</a>
+  1862→          </div>
+  1863→        </div>
+  1864→      </footer>
+  1865→    </div>
+  1866→  )
+  1867→}
+  1868→
